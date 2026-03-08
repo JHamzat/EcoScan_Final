@@ -1,2 +1,4 @@
 # EcoScan_Final
 MVP for an Environmental Product Impact Scanner
+
+EcoScan is a web application designed to help consumers make more environmentally conscious purchasing decisions. By scanning product barcodes or packaging users receive instant feedback on the item's environmental impact, including carbon footprint, sustainability score, and eco-friendly alternatives. The system uses machine learning to analyse data from publicly available environmental databases, supply chain information, and product metadata. The app provides a simple and user friendly interface and includes features such as personalised sustainability goals, product comparisons, and community driven feedback. This project aims to raise awareness and promote responsible consumption through technology and data transparency.
