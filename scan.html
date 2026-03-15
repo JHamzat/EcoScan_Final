@@ -1,0 +1,216 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>EcoScan - Barcode Scanner</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: Arial, sans-serif;
+        background: #f5f5f5;
+        padding: 20px;
+      }
+
+      h1 {
+        text-align: center;
+        color: #2d5016;
+        margin-bottom: 20px;
+      }
+
+      #scanner-container {
+        max-width: 500px;
+        margin: 0 auto 20px;
+        background: #000;
+        border-radius: 10px;
+        overflow: hidden;
+      }
+
+      #video {
+        width: 100%;
+        display: block;
+      }
+
+      #result {
+        max-width: 500px;
+        margin: 0 auto;
+        padding: 20px;
+        background: white;
+        border-radius: 8px;
+        min-height: 60px;
+        text-align: center;
+      }
+
+      .btn {
+        display: block;
+        margin: 20px auto;
+        padding: 15px 30px;
+        background: #4caf50;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-size: 16px;
+        cursor: pointer;
+      }
+
+      .btn:hover {
+        background: #45a049;
+      }
+
+      .success {
+        color: #388e3c;
+        padding: 15px;
+        background: #e8f5e9;
+        border-radius: 5px;
+        margin-bottom: 10px;
+      }
+
+      .error {
+        color: #d32f2f;
+        padding: 15px;
+        background: #ffebee;
+        border-radius: 5px;
+      }
+
+      header {
+        background: linear-gradient(135deg, #2d5016 0%, #558b2f 100%);
+        color: white;
+        padding: 20px;
+        text-align: center;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      }
+
+      header h1 {
+        font-size: 2.5em;
+        margin-bottom: 5px;
+      }
+
+      header p {
+        font-size: 0.95em;
+        opacity: 0.95;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>🌱 EcoScan</h1>
+      <p>Make Conscious Choices. Protect the Planet.</p>
+    </header>
+
+    <button id="startBtn" class="btn">Start Scanning</button>
+
+    <div id="scanner-container" style="display: none">
+      <video id="video" autoplay playsinline></video>
+    </div>
+
+    <div id="result"></div>
+
+    <script src="https://unpkg.com/@zxing/library@latest"></script>
+    <script src="script.js"></script>
+    <script>
+      // Scanner Module - Barcode scanning logic
+      const ScannerModule = (() => {
+        const video = document.getElementById("video");
+        const resultDiv = document.getElementById("result");
+        const scannerContainer = document.getElementById("scanner-container");
+        const startBtn = document.getElementById("startBtn");
+
+        const codeReader = new ZXing.BrowserBarcodeReader();
+        let isScanning = false;
+
+        const init = () => {
+          startBtn.addEventListener("click", startScanner);
+        };
+
+        const startScanner = async () => {
+          try {
+            resultDiv.innerHTML = "<p>Initializing camera...</p>";
+
+            const videoInputDevices = await codeReader.listVideoInputDevices();
+
+            if (videoInputDevices.length === 0) {
+              throw new Error("No camera found on this device");
+            }
+
+            console.log("Found cameras:", videoInputDevices);
+
+            const firstDeviceId = videoInputDevices[0].deviceId;
+
+            scannerContainer.style.display = "block";
+            startBtn.style.display = "none";
+            resultDiv.innerHTML = "<p>📷 Point camera at a barcode...</p>";
+
+            isScanning = true;
+
+            codeReader.decodeFromVideoDevice(
+              firstDeviceId,
+              "video",
+              (result, err) => {
+                if (result && isScanning) {
+                  console.log("Barcode detected:", result.text);
+                  handleBarcode(result.text);
+
+                  isScanning = false;
+                  codeReader.reset();
+                  scannerContainer.style.display = "none";
+                }
+
+                if (err && !(err instanceof ZXing.NotFoundException)) {
+                  console.error("Scanner error:", err);
+                }
+              },
+            );
+          } catch (err) {
+            console.error("Error starting scanner:", err);
+            resultDiv.innerHTML = `
+              <div class="error">
+                <p><strong>Error:</strong> ${err.message}</p>
+                <p>Make sure you've allowed camera access!</p>
+              </div>
+            `;
+            startBtn.style.display = "block";
+            scannerContainer.style.display = "none";
+          }
+        };
+
+        const handleBarcode = (barcode) => {
+          console.log("Processing barcode:", barcode);
+
+          resultDiv.innerHTML = `
+            <div class="success">
+              <h3>✅ Barcode Scanned!</h3>
+              <p><strong>Code:</strong> ${barcode}</p>
+              <p>Fetching product information...</p>
+            </div>
+          `;
+
+          fetchProductData(barcode);
+        };
+
+        const resetScanner = () => {
+          startBtn.style.display = "block";
+          scannerContainer.style.display = "none";
+          resultDiv.innerHTML = "";
+          isScanning = false;
+        };
+
+        return {
+          init,
+          startScanner,
+          handleBarcode,
+          resetScanner,
+          getResultDiv: () => resultDiv,
+          getStartBtn: () => startBtn,
+        };
+      })();
+
+      // Initialize scanner on page load
+      document.addEventListener("DOMContentLoaded", ScannerModule.init);
+    </script>
+  </body>
+</html>
