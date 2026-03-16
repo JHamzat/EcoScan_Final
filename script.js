@@ -53,6 +53,8 @@ function displayProductInfo(product, barcode) {
   const scoreData = ScoringSystem.calculateSustainabilityScore(product);
   const sustainabilityScore = scoreData.sustainability_score;
   const grade = scoreData.grade;
+  const confidenceScore = scoreData.confidence_score;
+  const confidenceGrade = scoreData.confidence_grade;
   const interpretation =
     ScoringSystem.getScoreInterpretation(sustainabilityScore);
 
@@ -70,20 +72,11 @@ function displayProductInfo(product, barcode) {
           <p style="font-size: 14px; color: #666;">Sustainability Score</p>
           <p style="font-size: 32px; font-weight: bold; color: ${interpretation.color};">${sustainabilityScore}/100</p>
           <p style="font-size: 18px; font-weight: bold; color: ${interpretation.color};">Grade: ${grade}</p>
+          <p style="font-size: 14px; color: #666;">Confidence: ${confidenceScore}/100 (${confidenceGrade})</p>
           <p style="font-size: 12px; color: ${interpretation.color};">
             ${interpretation.text}
           </p>
-          
-          <div style="margin-top: 15px; font-size: 12px;">
-            <p style="font-weight: bold; margin-bottom: 8px;">Score Breakdown (Weighted):</p>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px;">
-              <div>Origin: ${scoreData.factor_scores.origin.score}/100 (${scoreData.factor_scores.origin.weighted})</div>
-              <div>Ingredients: ${scoreData.factor_scores.ingredient.score}/100 (${scoreData.factor_scores.ingredient.weighted})</div>
-              <div>Processing: ${scoreData.factor_scores.processing.score}/100 (${scoreData.factor_scores.processing.weighted})</div>
-              <div>Packaging: ${scoreData.factor_scores.packaging.score}/100 (${scoreData.factor_scores.packaging.weighted})</div>
-              <div>Nutrition: ${scoreData.factor_scores.nutrition.score}/100 (${scoreData.factor_scores.nutrition.weighted})</div>
-            </div>
-          </div>
+
 
           ${
             scoreData.flags.missing_data.length > 0
