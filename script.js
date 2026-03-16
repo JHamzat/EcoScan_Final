@@ -49,8 +49,11 @@ function displayProductInfo(product, barcode) {
   const imageUrl = product.image_url || "";
   const categories = product.categories || "Not specified";
 
-  // Calculate a mock sustainability score (for demo)
-  const mockScore = Math.floor(Math.random() * 40) + 50; // 50-90
+  // Calculate sustainability score using the new scoring system
+  const scoreData = ScoringSystem.calculateSustainabilityScore(product);
+  const sustainabilityScore = scoreData.totalScore;
+  const interpretation =
+    ScoringSystem.getScoreInterpretation(sustainabilityScore);
 
   const resultDiv = getResultDiv();
   if (resultDiv) {
@@ -63,15 +66,26 @@ function displayProductInfo(product, barcode) {
         <p style="font-size: 12px; color: #888; margin-top: 5px;">Barcode: ${barcode}</p>
         
         <div style="margin: 20px 0; padding: 15px; background: #f0f7ff; border-radius: 8px;">
-          <p style="font-size: 14px; color: #666;">Sustainability Score (Demo)</p>
-          <p style="font-size: 32px; font-weight: bold; color: #2196F3;">${mockScore}/100</p>
-          <p style="font-size: 12px; color: #888;">
-            ${mockScore >= 75 ? "🌟 Great choice!" : mockScore >= 60 ? "👍 Good option" : "⚠️ Consider alternatives"}
+          <p style="font-size: 14px; color: #666;">Sustainability Score</p>
+          <p style="font-size: 32px; font-weight: bold; color: ${interpretation.color};">${sustainabilityScore}/100</p>
+          <p style="font-size: 12px; color: ${interpretation.color};">
+            ${interpretation.text}
           </p>
+          
+          <div style="margin-top: 15px; font-size: 12px;">
+            <p style="font-weight: bold; margin-bottom: 8px;">Score Breakdown:</p>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+              <div>Nutrition: ${scoreData.factors.nutrition}/100</div>
+              <div>Processing: ${scoreData.factors.processing}/100</div>
+              <div>Packaging: ${scoreData.factors.packaging}/100</div>
+              <div>Origin: ${scoreData.factors.origin}/100</div>
+              <div>Ingredients: ${scoreData.factors.ingredients}/100</div>
+            </div>
+          </div>
         </div>
         
         <p style="font-size: 11px; color: #999; margin-top: 10px;">
-          <em>This is a prototype. Full environmental analysis would include carbon footprint, packaging, certifications, etc.</em>
+          <em>Score based on nutrition, processing, packaging, origin, and ingredients.</em>
         </p>
       </div>
     `;
