@@ -51,7 +51,8 @@ function displayProductInfo(product, barcode) {
 
   // Calculate sustainability score using the new scoring system
   const scoreData = ScoringSystem.calculateSustainabilityScore(product);
-  const sustainabilityScore = scoreData.totalScore;
+  const sustainabilityScore = scoreData.sustainability_score;
+  const grade = scoreData.grade;
   const interpretation =
     ScoringSystem.getScoreInterpretation(sustainabilityScore);
 
@@ -68,25 +69,55 @@ function displayProductInfo(product, barcode) {
         <div style="margin: 20px 0; padding: 15px; background: #f0f7ff; border-radius: 8px;">
           <p style="font-size: 14px; color: #666;">Sustainability Score</p>
           <p style="font-size: 32px; font-weight: bold; color: ${interpretation.color};">${sustainabilityScore}/100</p>
+          <p style="font-size: 18px; font-weight: bold; color: ${interpretation.color};">Grade: ${grade}</p>
           <p style="font-size: 12px; color: ${interpretation.color};">
             ${interpretation.text}
           </p>
           
           <div style="margin-top: 15px; font-size: 12px;">
-            <p style="font-weight: bold; margin-bottom: 8px;">Score Breakdown:</p>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
-              <div>Nutrition: ${scoreData.factors.nutrition}/100</div>
-              <div>Processing: ${scoreData.factors.processing}/100</div>
-              <div>Packaging: ${scoreData.factors.packaging}/100</div>
-              <div>Origin: ${scoreData.factors.origin}/100</div>
-              <div>Ingredients: ${scoreData.factors.ingredients}/100</div>
+            <p style="font-weight: bold; margin-bottom: 8px;">Score Breakdown (Weighted):</p>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px;">
+              <div>Origin: ${scoreData.factor_scores.origin.score}/100 (${scoreData.factor_scores.origin.weighted})</div>
+              <div>Ingredients: ${scoreData.factor_scores.ingredient.score}/100 (${scoreData.factor_scores.ingredient.weighted})</div>
+              <div>Processing: ${scoreData.factor_scores.processing.score}/100 (${scoreData.factor_scores.processing.weighted})</div>
+              <div>Packaging: ${scoreData.factor_scores.packaging.score}/100 (${scoreData.factor_scores.packaging.weighted})</div>
+              <div>Nutrition: ${scoreData.factor_scores.nutrition.score}/100 (${scoreData.factor_scores.nutrition.weighted})</div>
             </div>
           </div>
+
+          ${
+            scoreData.flags.missing_data.length > 0
+              ? `
+            <div style="margin-top: 10px; font-size: 11px; color: #ff6b6b;">
+              <p><strong>Missing Data:</strong> ${scoreData.flags.missing_data.join(", ")}</p>
+            </div>
+          `
+              : ""
+          }
+
+          ${
+            Object.values(scoreData.flags).some((flag) => flag === true)
+              ? `
+            <div style="margin-top: 10px; font-size: 11px; color: #ff9800;">
+              <p><strong>Concerns:</strong> 
+                ${scoreData.flags.palm_oil ? "Palm oil, " : ""}
+                ${scoreData.flags.ultra_processed ? "Ultra-processed, " : ""}
+                ${scoreData.flags.plastic_packaging ? "Plastic packaging, " : ""}
+                ${scoreData.flags.imported ? "Imported, " : ""}
+                ${scoreData.flags.high_additives ? "High additives" : ""}
+              </p>
+            </div>
+          `
+              : ""
+          }
         </div>
         
-        <p style="font-size: 11px; color: #999; margin-top: 10px;">
-          <em>Score based on nutrition, processing, packaging, origin, and ingredients.</em>
-        </p>
+        <div style="margin: 15px 0; padding: 10px; background: #f9f9f9; border-radius: 5px; font-size: 11px; color: #666;">
+          <p style="font-weight: bold; margin-bottom: 5px;">Scoring Logic:</p>
+          <p><strong>Formula:</strong> (Origin × 0.25) + (Ingredients × 0.25) + (Processing × 0.20) + (Packaging × 0.20) + (Nutrition × 0.10)</p>
+          <p><strong>Factors:</strong> Origin (local vs imported), Ingredients (palm oil, additives), Processing (NOVA group), Packaging (materials), Nutrition (Nutri-Score)</p>
+          <p><strong>Grades:</strong> A (80-100), B (65-79), C (50-64), D (35-49), E (0-34)</p>
+        </div>
       </div>
     `;
 

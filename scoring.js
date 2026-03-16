@@ -1,11 +1,19 @@
 // scoring.js - Sustainability scoring system for EcoScan
 
 const ScoringSystem = (() => {
-  // Nutrition Factor: Based on Open Food Facts nutrition grade
-  // A → 90, B → 75, C → 60, D → 40, E → 20
+  // Helper function to get grade from score
+  function getGrade(score) {
+    if (score >= 80) return "A";
+    if (score >= 65) return "B";
+    if (score >= 50) return "C";
+    if (score >= 35) return "D";
+    return "E";
+  }
+
+  // FACTOR 1 — NUTRITION (weight: 0.10)
   function calculateNutritionFactor(product) {
     const grade = product.nutrition_grades || product.nutrition_grade_fr;
-    if (!grade) return 50; // Default if no grade available
+    if (!grade) return { score: 30, missing: true }; // Missing-data penalty
 
     const gradeMap = {
       a: 90,
@@ -15,31 +23,33 @@ const ScoringSystem = (() => {
       e: 20,
     };
 
-    return gradeMap[grade.toLowerCase()] || 50;
+    const score = gradeMap[grade.toLowerCase()] || 30;
+    return { score, missing: false };
   }
 
-  // Processing Factor: Based on NOVA group
-  // NOVA 1 (unprocessed) = 90, NOVA 4 (ultra-processed) = 20
+  // FACTOR 2 — PROCESSING (weight: 0.20)
   function calculateProcessingFactor(product) {
     const novaGroup = product.nova_group;
-    if (!novaGroup) return 50; // Default if no NOVA data
+    if (!novaGroup) return { score: 30, missing: true }; // Missing-data penalty
 
     const novaMap = {
-      1: 90, // Unprocessed or minimally processed
-      2: 75, // Processed culinary ingredients
-      3: 50, // Processed foods
-      4: 20, // Ultra-processed
+      1: 95, // unprocessed
+      2: 75, // culinary ingredients
+      3: 50, // processed
+      4: 15, // ultra-processed
     };
 
-    return novaMap[novaGroup] || 50;
+    const score = novaMap[novaGroup] || 30;
+    return { score, missing: false, ultra_processed: novaGroup === 4 };
   }
 
-  // Packaging Factor: Based on material recyclability and weight
+  // FACTOR 3 — PACKAGING (weight: 0.20)
   function calculatePackagingFactor(product) {
     const packaging = product.packaging;
-    if (!packaging) return 30; // Penalty for missing packaging info
+    if (!packaging) return { score: 25, missing: true }; // Missing-data penalty
 
-    let score = 50; // Base score
+    let score = 70; // Base score
+    let hasPlastic = false;
 
     // Handle packaging as string or array
     let packagingText = "";
@@ -48,148 +58,199 @@ const ScoringSystem = (() => {
     } else if (typeof packaging === "string") {
       packagingText = packaging.toLowerCase();
     } else {
-      return 30; // Penalty for unrecognized format
+      return { score: 25, missing: true };
     }
 
-    // Positive factors
-    if (
-      packagingText.includes("glass") &&
-      packagingText.includes("recyclable")
-    ) {
-      score += 30;
-    } else if (packagingText.includes("glass")) {
-      score += 20;
-    }
+    // Bonuses (additive)
+    if (packagingText.includes("glass")) score += 20;
+    if (packagingText.includes("cardboard")) score += 15;
+    if (packagingText.includes("paper")) score += 10;
+    if (packagingText.includes("recycled")) score += 10;
+    if (packagingText.includes("recyclable")) score += 10;
 
-    if (
-      packagingText.includes("paper") ||
-      packagingText.includes("cardboard")
-    ) {
-      score += 15;
+    // Penalties (subtractive)
+    if (packagingText.includes("plastic")) {
+      score -= 25;
+      hasPlastic = true;
     }
+    if (packagingText.includes("styrofoam")) score -= 30;
+    if (packagingText.includes("film")) score -= 10;
+    if (packagingText.includes("sachet")) score -= 10;
 
-    if (
-      packagingText.includes("metal") &&
-      packagingText.includes("recyclable")
-    ) {
-      score += 20;
-    }
+    // Clamp to 0-100
+    score = Math.max(0, Math.min(100, score));
 
-    // Negative factors
-    if (
-      packagingText.includes("plastic") &&
-      !packagingText.includes("recyclable")
-    ) {
-      score -= 20;
-    }
-
-    if (
-      packagingText.includes("plastic") &&
-      packagingText.includes("single-use")
-    ) {
-      score -= 15;
-    }
-
-    // Clamp between 0 and 100
-    return Math.max(0, Math.min(100, score));
+    return { score, missing: false, plastic_packaging: hasPlastic };
   }
 
-  // Origin Factor: Local vs imported, or carbon footprint
+  // FACTOR 4 — ORIGIN (weight: 0.25)
   function calculateOriginFactor(product) {
     // Check for carbon footprint data first
-    if (product.ecoscore_data && product.ecoscore_data.agribalyse) {
+    if (
+      product.ecoscore_data &&
+      product.ecoscore_data.agribalyse &&
+      product.ecoscore_data.agribalyse.co2_total !== undefined
+    ) {
       const co2Total = product.ecoscore_data.agribalyse.co2_total;
-      if (co2Total !== undefined) {
-        // Scale carbon footprint: lower CO2 = higher score
-        // Assuming typical range 0-50 kg CO2/kg, scale to 0-100
-        const scaledScore = Math.max(0, 100 - co2Total * 2);
-        return Math.min(100, scaledScore);
-      }
+      const score = Math.max(0, Math.min(100, 100 - co2Total * 10));
+      return { score, missing: false, imported: false, co2_based: true };
     }
 
     // Fallback to origin-based scoring
-    const origins = product.origins;
-    if (!origins) return 50; // Default if no origin data
+    const origins =
+      product.origins ||
+      product.manufacturing_places ||
+      product.countries_where_sold;
+    if (!origins) return { score: 30, missing: true }; // Missing-data penalty
 
-    const originsText = origins.toLowerCase();
+    const originsText = Array.isArray(origins)
+      ? origins.join(" ").toLowerCase()
+      : origins.toLowerCase();
 
-    // Simple proxy: if contains "local" or country matches user's presumed location
-    // For demo, assume US-based user
+    // Simple proxy logic (assuming US-based user for demo)
+    let score = 30; // Default for unknown
+    let imported = true;
+
     if (
       originsText.includes("united states") ||
       originsText.includes("usa") ||
       originsText.includes("local") ||
       originsText.includes("domestic")
     ) {
-      return 80; // Local = higher score
+      score = 85; // Local/same country
+      imported = false;
+    } else if (
+      originsText.includes("canada") ||
+      originsText.includes("mexico") ||
+      originsText.includes("north america")
+    ) {
+      score = 60; // Same continent
     } else {
-      return 40; // Imported = lower score
+      score = 35; // Intercontinental
     }
+
+    return { score, missing: false, imported };
   }
 
-  // Ingredient Impact Factor: Penalize palm oil, high ingredient count, additives
+  // FACTOR 5 — INGREDIENT IMPACT (weight: 0.25)
   function calculateIngredientFactor(product) {
     const ingredients = product.ingredients;
-    if (!ingredients) return 50; // Default if no ingredient data
+    const ingredientsText = product.ingredients_text;
+    const additivesTags = product.additives_tags || [];
+    const analysisTags = product.ingredients_analysis_tags || [];
 
-    let score = 100; // Start with perfect score
+    if (!ingredients && !ingredientsText) return { score: 30, missing: true }; // Missing-data penalty
+
+    let score = 80; // Base score
+    let palmOil = false;
+    let highAdditives = false;
 
     // Check for palm oil
-    const ingredientsText = JSON.stringify(ingredients).toLowerCase();
     if (
-      ingredientsText.includes("palm") ||
-      ingredientsText.includes("palm oil")
+      analysisTags.includes("en:palm-oil") ||
+      (ingredientsText && ingredientsText.toLowerCase().includes("palm oil"))
     ) {
-      score -= 30;
+      score -= 25;
+      palmOil = true;
     }
 
     // Penalize high ingredient count
-    const ingredientCount = ingredients.length;
+    let ingredientCount = 0;
+    if (ingredients && Array.isArray(ingredients)) {
+      ingredientCount = ingredients.length;
+    } else if (ingredientsText) {
+      // Rough estimate from text (count commas)
+      ingredientCount = (ingredientsText.match(/,/g) || []).length + 1;
+    }
+
     if (ingredientCount > 20) {
       score -= 20;
     } else if (ingredientCount > 10) {
       score -= 10;
     }
 
-    // Check for additives (ingredients with high additive potential)
-    let additiveCount = 0;
-    ingredients.forEach((ing) => {
-      if (
-        ing.text &&
-        (ing.text.toLowerCase().includes("additive") ||
-          ing.text.toLowerCase().includes("preservative") ||
-          ing.text.toLowerCase().includes("color") ||
-          ing.text.toLowerCase().includes("flavor"))
-      ) {
-        additiveCount++;
-      }
-    });
+    // Penalize additives
+    const additivePenalty = Math.min(20, additivesTags.length * 3);
+    score -= additivePenalty;
+    if (additivesTags.length > 5) highAdditives = true;
 
-    score -= Math.min(20, additiveCount * 5); // Up to 20 points penalty
+    // Clamp to 0-100
+    score = Math.max(0, Math.min(100, score));
 
-    return Math.max(0, score);
+    return {
+      score,
+      missing: false,
+      palm_oil: palmOil,
+      high_additives: highAdditives,
+    };
   }
 
   // Calculate overall sustainability score
   function calculateSustainabilityScore(product) {
-    const factors = {
-      nutrition: calculateNutritionFactor(product),
-      processing: calculateProcessingFactor(product),
-      packaging: calculatePackagingFactor(product),
-      origin: calculateOriginFactor(product),
-      ingredients: calculateIngredientFactor(product),
+    const nutrition = calculateNutritionFactor(product);
+    const processing = calculateProcessingFactor(product);
+    const packaging = calculatePackagingFactor(product);
+    const origin = calculateOriginFactor(product);
+    const ingredient = calculateIngredientFactor(product);
+
+    // Calculate weighted scores
+    const factorScores = {
+      nutrition: {
+        score: nutrition.score,
+        weight: 0.1,
+        weighted: Math.round(nutrition.score * 0.1 * 10) / 10,
+      },
+      processing: {
+        score: processing.score,
+        weight: 0.2,
+        weighted: Math.round(processing.score * 0.2 * 10) / 10,
+      },
+      packaging: {
+        score: packaging.score,
+        weight: 0.2,
+        weighted: Math.round(packaging.score * 0.2 * 10) / 10,
+      },
+      origin: {
+        score: origin.score,
+        weight: 0.25,
+        weighted: Math.round(origin.score * 0.25 * 10) / 10,
+      },
+      ingredient: {
+        score: ingredient.score,
+        weight: 0.25,
+        weighted: Math.round(ingredient.score * 0.25 * 10) / 10,
+      },
     };
 
-    // Equal weighting for all factors
-    const totalScore = Object.values(factors).reduce(
-      (sum, score) => sum + score,
+    // Calculate overall score
+    const totalWeightedScore = Object.values(factorScores).reduce(
+      (sum, factor) => sum + factor.weighted,
       0,
     );
-    const averageScore = Math.round(totalScore / Object.keys(factors).length);
+    const sustainabilityScore = Math.round(totalWeightedScore * 10) / 10;
+
+    // Collect flags
+    const flags = {
+      palm_oil: ingredient.palm_oil || false,
+      ultra_processed: processing.ultra_processed || false,
+      plastic_packaging: packaging.plastic_packaging || false,
+      imported: origin.imported || false,
+      high_additives: ingredient.high_additives || false,
+      missing_data: [],
+    };
+
+    // Add missing data flags
+    if (nutrition.missing) flags.missing_data.push("nutrition");
+    if (processing.missing) flags.missing_data.push("processing");
+    if (packaging.missing) flags.missing_data.push("packaging");
+    if (origin.missing) flags.missing_data.push("origin");
+    if (ingredient.missing) flags.missing_data.push("ingredient");
 
     return {
-      totalScore: averageScore,
-      factors: factors,
+      sustainability_score: sustainabilityScore,
+      grade: getGrade(sustainabilityScore),
+      factor_scores: factorScores,
+      flags: flags,
     };
   }
 
