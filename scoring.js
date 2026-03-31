@@ -211,19 +211,28 @@ const ScoringSystem = (() => {
     if (!packaging) return 0.0;
 
     // Handle packaging as string or array
-    let packagingText = '';
+    let packagingText = "";
     if (Array.isArray(packaging)) {
-      packagingText = packaging.join(' ').toLowerCase();
-    } else if (typeof packaging === 'string') {
+      packagingText = packaging.join(" ").toLowerCase();
+    } else if (typeof packaging === "string") {
       packagingText = packaging.toLowerCase();
     } else {
       return 0.0;
     }
 
     // Count distinct materials (rough approximation)
-    const materials = ['glass', 'plastic', 'paper', 'cardboard', 'metal', 'styrofoam', 'film', 'sachet'];
+    const materials = [
+      "glass",
+      "plastic",
+      "paper",
+      "cardboard",
+      "metal",
+      "styrofoam",
+      "film",
+      "sachet",
+    ];
     let distinctCount = 0;
-    materials.forEach(material => {
+    materials.forEach((material) => {
       if (packagingText.includes(material)) distinctCount++;
     });
 
@@ -235,24 +244,54 @@ const ScoringSystem = (() => {
   // Origin confidence
   function calculateOriginConfidence(product) {
     // Check for carbon footprint data first (highest confidence)
-    if (product.ecoscore_data && product.ecoscore_data.agribalyse && product.ecoscore_data.agribalyse.co2_total !== undefined) {
+    if (
+      product.ecoscore_data &&
+      product.ecoscore_data.agribalyse &&
+      product.ecoscore_data.agribalyse.co2_total !== undefined
+    ) {
       return 1.0; // Hard data
     }
 
     // Check for specific country data
-    const origins = product.origins || product.manufacturing_places || product.countries_where_sold;
+    const origins =
+      product.origins ||
+      product.manufacturing_places ||
+      product.countries_where_sold;
     if (!origins) return 0.0;
 
-    const originsText = Array.isArray(origins) ? origins.join(' ').toLowerCase() : origins.toLowerCase();
+    const originsText = Array.isArray(origins)
+      ? origins.join(" ").toLowerCase()
+      : origins.toLowerCase();
 
     // Specific countries
-    const specificCountries = ['united states', 'usa', 'canada', 'mexico', 'france', 'germany', 'italy', 'spain', 'china', 'japan', 'india', 'brazil', 'australia'];
+    const specificCountries = [
+      "united states",
+      "usa",
+      "canada",
+      "mexico",
+      "france",
+      "germany",
+      "italy",
+      "spain",
+      "china",
+      "japan",
+      "india",
+      "brazil",
+      "australia",
+    ];
     for (const country of specificCountries) {
       if (originsText.includes(country)) return 0.8;
     }
 
     // Continent-level only
-    const continents = ['europe', 'asia', 'africa', 'north america', 'south america', 'oceania'];
+    const continents = [
+      "europe",
+      "asia",
+      "africa",
+      "north america",
+      "south america",
+      "oceania",
+    ];
     for (const continent of continents) {
       if (originsText.includes(continent)) return 0.5;
     }
@@ -265,8 +304,10 @@ const ScoringSystem = (() => {
     const ingredientsText = product.ingredients_text;
     const additivesTags = product.additives_tags;
 
-    const hasIngredientsText = ingredientsText && ingredientsText.trim().length > 0;
-    const hasAdditivesTags = additivesTags && Array.isArray(additivesTags) && additivesTags.length > 0;
+    const hasIngredientsText =
+      ingredientsText && ingredientsText.trim().length > 0;
+    const hasAdditivesTags =
+      additivesTags && Array.isArray(additivesTags) && additivesTags.length > 0;
 
     if (hasIngredientsText && hasAdditivesTags) return 1.0;
     if (hasIngredientsText || hasAdditivesTags) return 0.5;
@@ -340,23 +381,25 @@ const ScoringSystem = (() => {
       processing: calculateProcessingConfidence(product),
       packaging: calculatePackagingConfidence(product),
       origin: calculateOriginConfidence(product),
-      ingredient: calculateIngredientConfidence(product)
+      ingredient: calculateIngredientConfidence(product),
     };
 
     // Calculate overall confidence
-    const confidence = Math.round((
-      (confidenceScores.nutrition * 0.10) +
-      (confidenceScores.processing * 0.20) +
-      (confidenceScores.packaging * 0.20) +
-      (confidenceScores.origin * 0.25) +
-      (confidenceScores.ingredient * 0.25)
-    ) * 100);
+    const confidence = Math.round(
+      (confidenceScores.nutrition * 0.1 +
+        confidenceScores.processing * 0.2 +
+        confidenceScores.packaging * 0.2 +
+        confidenceScores.origin * 0.25 +
+        confidenceScores.ingredient * 0.25) *
+        100,
+    );
 
     return {
       sustainability_score: sustainabilityScore,
       grade: getGrade(sustainabilityScore),
       confidence_score: confidence,
       confidence_grade: getConfidenceGrade(confidence),
+      factor_confidence: confidenceScores,
       factor_scores: factorScores,
       flags: flags,
     };

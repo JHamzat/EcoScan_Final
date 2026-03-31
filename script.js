@@ -58,6 +58,33 @@ function displayProductInfo(product, barcode) {
   const interpretation =
     ScoringSystem.getScoreInterpretation(sustainabilityScore);
 
+  // Create tooltip content for confidence details
+  const missingData = scoreData.flags.missing_data || [];
+  const factorConfidence = scoreData.factor_confidence || {};
+
+  let tooltipParts = [];
+
+  if (missingData.length > 0) {
+    tooltipParts.push(`Missing data: ${missingData.join(", ")}`);
+  }
+
+  // Check for partial confidence (not 1.0)
+  const partialFactors = [];
+  Object.entries(factorConfidence).forEach(([factor, confidence]) => {
+    if (confidence > 0 && confidence < 1.0) {
+      partialFactors.push(factor);
+    }
+  });
+
+  if (partialFactors.length > 0) {
+    tooltipParts.push(`Partial data: ${partialFactors.join(", ")}`);
+  }
+
+  const tooltipText =
+    tooltipParts.length > 0
+      ? tooltipParts.join(". ")
+      : "High data quality - all factors well-supported";
+
   const resultDiv = getResultDiv();
   if (resultDiv) {
     resultDiv.innerHTML = `
@@ -72,9 +99,9 @@ function displayProductInfo(product, barcode) {
           <p style="font-size: 14px; color: #666;">Sustainability Score</p>
           <p style="font-size: 32px; font-weight: bold; color: ${interpretation.color};">${sustainabilityScore}/100</p>
           <p style="font-size: 18px; font-weight: bold; color: ${interpretation.color};">Grade: ${grade}</p>
-          <p style="font-size: 14px; color: #666;">Confidence: ${confidenceScore}/100 (${confidenceGrade})</p>
           <p style="font-size: 12px; color: ${interpretation.color};">
             ${interpretation.text}
+            <span style="font-size: 10px; color: #888; margin-left: 8px;" title="${tooltipText}">· data confidence: ${confidenceGrade}</span>
           </p>
 
 
