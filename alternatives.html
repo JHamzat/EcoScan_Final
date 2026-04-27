@@ -75,6 +75,59 @@
         padding: 28px 20px 60px;
       }
 
+      /* ── Responsive ── */
+      @media (max-width: 600px) {
+        header {
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 10px;
+          padding: 14px 16px;
+        }
+
+        .header-brand h1 { font-size: 1.3em; }
+
+        nav { display: flex; margin-top: 0; }
+        nav a { margin-left: 0; margin-right: 14px; font-size: 0.82em; }
+
+        .page { padding: 14px 12px 60px; }
+
+        .original-banner {
+          padding: 14px;
+          gap: 12px;
+          flex-wrap: wrap;
+        }
+
+        .original-banner img,
+        .original-no-img { width: 44px; height: 44px; font-size: 1.4em; }
+
+        .score-circle { width: 48px; height: 48px; }
+        .score-circle .num { font-size: 0.95em; }
+
+        .section-heading { font-size: 1.2em; }
+
+        .alt-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
+
+        .alt-card-img,
+        .alt-card-no-img { width: 60px; height: 60px; font-size: 1.6em; margin-top: 14px; }
+
+        .alt-card-body { padding: 10px 12px 12px; }
+        .alt-card-name { font-size: 0.82em; }
+
+        .improvement-badge { font-size: 0.62em; padding: 2px 6px; }
+
+        .state-card { padding: 36px 20px; }
+        .btn { font-size: 0.88em; padding: 10px 20px; }
+      }
+
+      @media (min-width: 601px) and (max-width: 900px) {
+        header { padding: 14px 20px; }
+        .header-brand h1 { font-size: 1.4em; }
+        nav a { margin-left: 14px; }
+        .page { padding: 20px 16px 60px; }
+        .alt-grid { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); }
+        .section-heading { font-size: 1.3em; }
+      }
+
       /* ── Original product banner ── */
       .original-banner {
         background: var(--surface);
