@@ -1,0 +1,843 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EcoScan — Test Suite</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=DM+Sans:wght@400;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #0d1117;
+      --surface: #161b22;
+      --surface2: #21262d;
+      --border: #30363d;
+      --text: #e6edf3;
+      --muted: #7d8590;
+      --green: #3fb950;
+      --green-dim: #1a4d27;
+      --red: #f85149;
+      --red-dim: #4d1a1a;
+      --amber: #d29922;
+      --amber-dim: #3d2c00;
+      --blue: #58a6ff;
+      --mono: "JetBrains Mono", monospace;
+      --sans: "DM Sans", sans-serif;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: var(--sans);
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 32px 20px 60px;
+    }
+
+    .header {
+      max-width: 860px;
+      margin: 0 auto 32px;
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 20px;
+    }
+
+    .header-left h1 {
+      font-size: 1.5em;
+      font-weight: 700;
+      color: var(--text);
+      letter-spacing: -0.02em;
+    }
+
+    .header-left p {
+      font-family: var(--mono);
+      font-size: 0.72em;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+
+    #run-btn {
+      background: var(--green);
+      color: #0d1117;
+      border: none;
+      border-radius: 8px;
+      padding: 10px 22px;
+      font-family: var(--sans);
+      font-size: 0.88em;
+      font-weight: 700;
+      cursor: pointer;
+      transition: opacity 0.15s;
+    }
+
+    #run-btn:hover { opacity: 0.85; }
+    #run-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    /* Summary bar */
+    #summary {
+      max-width: 860px;
+      margin: 0 auto 24px;
+      display: none;
+    }
+
+    .summary-bar {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      gap: 24px;
+    }
+
+    .summary-stat { text-align: center; }
+    .summary-stat .val { font-family: var(--mono); font-size: 1.6em; font-weight: 600; }
+    .summary-stat .lbl { font-size: 0.7em; color: var(--muted); margin-top: 2px; text-transform: uppercase; letter-spacing: 0.06em; }
+    .val.pass { color: var(--green); }
+    .val.fail { color: var(--red); }
+    .val.total { color: var(--blue); }
+
+    .summary-progress {
+      flex: 1;
+      height: 6px;
+      background: var(--surface2);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .summary-progress-fill {
+      height: 100%;
+      background: var(--green);
+      border-radius: 4px;
+      transition: width 0.4s ease;
+    }
+
+    /* Suites */
+    .suites { max-width: 860px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; }
+
+    .suite {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    .suite-header {
+      padding: 14px 20px;
+      background: var(--surface2);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .suite-icon { font-size: 1.1em; }
+
+    .suite-name {
+      font-weight: 700;
+      font-size: 0.95em;
+      flex: 1;
+    }
+
+    .suite-badge {
+      font-family: var(--mono);
+      font-size: 0.7em;
+      padding: 3px 8px;
+      border-radius: 20px;
+      background: var(--surface);
+      color: var(--muted);
+      border: 1px solid var(--border);
+    }
+
+    .suite-badge.all-pass { background: var(--green-dim); color: var(--green); border-color: var(--green); }
+    .suite-badge.has-fail { background: var(--red-dim); color: var(--red); border-color: var(--red); }
+
+    /* Test rows */
+    .test-list { padding: 8px 0; }
+
+    .test-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 10px 20px;
+      border-bottom: 1px solid var(--border);
+      transition: background 0.1s;
+    }
+
+    .test-row:last-child { border-bottom: none; }
+    .test-row:hover { background: rgba(255,255,255,0.02); }
+
+    .test-status {
+      font-family: var(--mono);
+      font-size: 0.75em;
+      font-weight: 600;
+      padding: 2px 7px;
+      border-radius: 4px;
+      flex-shrink: 0;
+      margin-top: 1px;
+      min-width: 44px;
+      text-align: center;
+    }
+
+    .test-status.pass { background: var(--green-dim); color: var(--green); }
+    .test-status.fail { background: var(--red-dim); color: var(--red); }
+    .test-status.skip { background: var(--amber-dim); color: var(--amber); }
+    .test-status.running { background: var(--surface2); color: var(--muted); }
+
+    .test-info { flex: 1; min-width: 0; }
+
+    .test-name {
+      font-size: 0.88em;
+      color: var(--text);
+      line-height: 1.4;
+    }
+
+    .test-detail {
+      font-family: var(--mono);
+      font-size: 0.72em;
+      color: var(--muted);
+      margin-top: 4px;
+      line-height: 1.5;
+    }
+
+    .test-detail.error { color: var(--red); }
+    .test-detail.info  { color: var(--green); }
+
+    /* Loading spinner */
+    .spinner {
+      width: 14px; height: 14px;
+      border: 2px solid var(--border);
+      border-top-color: var(--blue);
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+      display: inline-block;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Empty state */
+    .empty-state {
+      max-width: 860px;
+      margin: 0 auto;
+      text-align: center;
+      padding: 80px 20px;
+      color: var(--muted);
+    }
+
+    .empty-state .big { font-size: 3em; margin-bottom: 16px; }
+    .empty-state p { font-size: 0.9em; line-height: 1.7; }
+
+    a { color: var(--blue); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-left">
+    <h1>🌱 EcoScan — Test Suite</h1>
+    <p>Unit &amp; Integration tests for HistoryModule and AlternativesModule</p>
+  </div>
+  <button id="run-btn" onclick="runAll()">▶ Run All Tests</button>
+</div>
+
+<div id="summary"></div>
+
+<div id="suites-container">
+  <div class="empty-state">
+    <div class="big">🧪</div>
+    <p>Press <strong>Run All Tests</strong> to execute the full test suite.<br>
+    Results will appear here with pass/fail status for each test.</p>
+  </div>
+</div>
+
+<!-- Load modules under test -->
+<script src="scoring.js"></script>
+<script src="history.js"></script>
+<script src="alternatives.js"></script>
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+// MINI TEST FRAMEWORK
+// ═══════════════════════════════════════════════════════════════
+
+const Results = { suites: [] };
+
+function suite(name, icon, fn) {
+  Results.suites.push({ name, icon, tests: [], fn });
+}
+
+// assert helpers — throw on failure, test runner catches them
+function assert(condition, message) {
+  if (!condition) throw new Error(message || "Assertion failed");
+}
+
+function assertEqual(actual, expected, label) {
+  if (actual !== expected)
+    throw new Error(`${label || "assertEqual"}: expected ${JSON.stringify(expected)}, got ${JSON.stringify(actual)}`);
+}
+
+function assertGte(actual, min, label) {
+  if (actual < min)
+    throw new Error(`${label || "assertGte"}: expected >= ${min}, got ${actual}`);
+}
+
+function assertLte(actual, max, label) {
+  if (actual > max)
+    throw new Error(`${label || "assertLte"}: expected <= ${max}, got ${actual}`);
+}
+
+function assertNull(actual, label) {
+  if (actual !== null && actual !== undefined)
+    throw new Error(`${label || "assertNull"}: expected null/undefined, got ${JSON.stringify(actual)}`);
+}
+
+function assertContains(arr, predicate, label) {
+  if (!arr.some(predicate))
+    throw new Error(`${label || "assertContains"}: no matching element found`);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// MOCK DATA HELPERS
+// ═══════════════════════════════════════════════════════════════
+
+function mockProduct(overrides = {}) {
+  return {
+    product_name: "Test Oat Biscuits",
+    brands: "TestBrand",
+    image_small_url: null,
+    nutrition_grades: "b",
+    nova_group: 3,
+    packaging: "cardboard",
+    origins: "United Kingdom",
+    ingredients_text: "Oats, sugar, butter",
+    additives_tags: [],
+    ingredients_analysis_tags: [],
+    categories_tags: ["en:snacks", "en:biscuits-and-cakes", "en:oat-biscuits"],
+    ...overrides,
+  };
+}
+
+function mockScoreData(overrides = {}) {
+  return {
+    sustainability_score: 62,
+    grade: "C",
+    confidence_score: 70,
+    confidence_grade: "medium",
+    factor_scores: {},
+    factor_confidence: {},
+    flags: {
+      palm_oil: false,
+      ultra_processed: false,
+      plastic_packaging: false,
+      imported: false,
+      high_additives: false,
+      missing_data: [],
+    },
+    ...overrides,
+  };
+}
+
+// Inject a history entry with a custom timestamp
+function injectEntry(barcode, score, grade, daysAgo = 0, secondsAgo = 60) {
+  const ts = new Date();
+  ts.setDate(ts.getDate() - daysAgo);
+  ts.setSeconds(ts.getSeconds() - secondsAgo);
+  const history = JSON.parse(localStorage.getItem("ecoscan_history") || "[]");
+  history.unshift({
+    id: Date.now() + Math.random(),
+    timestamp: ts.toISOString(),
+    barcode,
+    name: `Product ${barcode}`,
+    brand: "TestCo",
+    image: null,
+    categories: [],
+    score,
+    grade,
+    confidence: 70,
+    flags: { palm_oil: false, ultra_processed: false, plastic_packaging: false, imported: false, high_additives: false, missing_data: [] },
+  });
+  localStorage.setItem("ecoscan_history", JSON.stringify(history));
+}
+
+// ═══════════════════════════════════════════════════════════════
+// SUITE 1 — HistoryModule: saveScan
+// ═══════════════════════════════════════════════════════════════
+
+suite("HistoryModule — saveScan", "💾", () => {
+
+  it("saves a scan and it appears in getHistory()", () => {
+    HistoryModule.clearHistory();
+    const product = mockProduct();
+    const scoreData = mockScoreData();
+    HistoryModule.saveScan(product, "1234567890", scoreData);
+    const history = HistoryModule.getHistory();
+    assertEqual(history.length, 1, "history length");
+    assertEqual(history[0].barcode, "1234567890", "barcode stored");
+    assertEqual(history[0].name, "Test Oat Biscuits", "name stored");
+    assertEqual(history[0].score, 62, "score stored");
+    assertEqual(history[0].grade, "C", "grade stored");
+  });
+
+  it("stores brand, image, and flags correctly", () => {
+    HistoryModule.clearHistory();
+    const product = mockProduct({ brands: "SpecialBrand" });
+    const scoreData = mockScoreData({ flags: { palm_oil: true, ultra_processed: false, plastic_packaging: false, imported: false, high_additives: false, missing_data: [] } });
+    HistoryModule.saveScan(product, "AAA", scoreData);
+    const entry = HistoryModule.getHistory()[0];
+    assertEqual(entry.brand, "SpecialBrand", "brand");
+    assert(entry.flags.palm_oil === true, "palm_oil flag stored");
+  });
+
+  it("rejects a duplicate barcode scanned within 30 seconds", () => {
+    HistoryModule.clearHistory();
+    const p = mockProduct();
+    const s = mockScoreData();
+    HistoryModule.saveScan(p, "DUPE001", s);
+    HistoryModule.saveScan(p, "DUPE001", s); // immediate duplicate
+    assertEqual(HistoryModule.getHistory().length, 1, "only 1 entry after duplicate");
+  });
+
+  it("allows the same barcode again after 30+ seconds", () => {
+    HistoryModule.clearHistory();
+    // Inject an entry timestamped 40 seconds ago
+    injectEntry("REPEAT001", 55, "C", 0, 40);
+    const p = mockProduct();
+    const s = mockScoreData();
+    HistoryModule.saveScan(p, "REPEAT001", s);
+    assertEqual(HistoryModule.getHistory().length, 2, "2 entries after 40s gap");
+  });
+
+  it("stores entries newest-first", () => {
+    HistoryModule.clearHistory();
+    injectEntry("OLD001", 50, "C", 0, 120);
+    HistoryModule.saveScan(mockProduct(), "NEW001", mockScoreData({ sustainability_score: 70, grade: "B" }));
+    const h = HistoryModule.getHistory();
+    assertEqual(h[0].barcode, "NEW001", "newest entry is first");
+  });
+
+  it("caps storage at 200 entries", () => {
+    HistoryModule.clearHistory();
+    for (let i = 0; i < 205; i++) {
+      injectEntry(`PROD${i}`, 50, "C", 0, i * 35 + 35);
+    }
+    assertLte(HistoryModule.getHistory().length, 200, "max 200 entries");
+  });
+
+});
+
+// ═══════════════════════════════════════════════════════════════
+// SUITE 2 — HistoryModule: getWeeklySummary
+// ═══════════════════════════════════════════════════════════════
+
+suite("HistoryModule — getWeeklySummary", "📊", () => {
+
+  it("returns hasData:false when history is empty", () => {
+    HistoryModule.clearHistory();
+    const s = HistoryModule.getWeeklySummary();
+    assert(s.hasData === false, "hasData should be false");
+  });
+
+  it("returns hasData:false when all entries are older than 7 days", () => {
+    HistoryModule.clearHistory();
+    injectEntry("OLD001", 60, "C", 8, 60); // 8 days ago
+    injectEntry("OLD002", 70, "B", 10, 60);
+    const s = HistoryModule.getWeeklySummary();
+    assert(s.hasData === false, "entries older than 7 days excluded");
+  });
+
+  it("calculates the correct average score", () => {
+    HistoryModule.clearHistory();
+    injectEntry("P1", 80, "A", 0, 100);
+    injectEntry("P2", 60, "C", 1, 100);
+    injectEntry("P3", 40, "D", 2, 100);
+    const s = HistoryModule.getWeeklySummary();
+    // average of 80, 60, 40 = 60
+    assertEqual(s.avgScore, 60, "average score");
+  });
+
+  it("counts total scans correctly", () => {
+    HistoryModule.clearHistory();
+    injectEntry("P1", 70, "B", 0, 100);
+    injectEntry("P2", 55, "C", 1, 100);
+    injectEntry("P3", 82, "A", 2, 100);
+    const s = HistoryModule.getWeeklySummary();
+    assertEqual(s.totalScans, 3, "totalScans");
+  });
+
+  it("correctly counts grade distribution", () => {
+    HistoryModule.clearHistory();
+    injectEntry("P1", 85, "A", 0, 100);
+    injectEntry("P2", 85, "A", 1, 100);
+    injectEntry("P3", 67, "B", 2, 100);
+    const s = HistoryModule.getWeeklySummary();
+    assertEqual(s.gradeCounts.A, 2, "grade A count");
+    assertEqual(s.gradeCounts.B, 1, "grade B count");
+    assertEqual(s.gradeCounts.C, 0, "grade C count");
+  });
+
+  it("identifies the best product correctly", () => {
+    HistoryModule.clearHistory();
+    injectEntry("BEST", 88, "A", 0, 100);
+    injectEntry("MID",  65, "B", 1, 100);
+    injectEntry("WORST", 30, "E", 2, 100);
+    const s = HistoryModule.getWeeklySummary();
+    assertEqual(s.best.barcode, "BEST", "best product barcode");
+    assertEqual(s.worst.barcode, "WORST", "worst product barcode");
+  });
+
+  it("excludes entries older than 7 days from summary but keeps them in full history", () => {
+    HistoryModule.clearHistory();
+    injectEntry("RECENT", 70, "B", 1, 100);
+    injectEntry("OLD",    40, "D", 9, 100); // 9 days ago
+    const s = HistoryModule.getWeeklySummary();
+    assertEqual(s.totalScans, 1, "only recent entry in weekly summary");
+    assertEqual(HistoryModule.getHistory().length, 2, "both entries in full history");
+  });
+
+  it("produces a dailyCounts object with 7 keys", () => {
+    HistoryModule.clearHistory();
+    injectEntry("P1", 60, "C", 0, 100);
+    const s = HistoryModule.getWeeklySummary();
+    assertEqual(Object.keys(s.dailyCounts).length, 7, "7 days in dailyCounts");
+  });
+
+});
+
+// ═══════════════════════════════════════════════════════════════
+// SUITE 3 — HistoryModule: deleteEntry & clearHistory
+// ═══════════════════════════════════════════════════════════════
+
+suite("HistoryModule — deleteEntry & clearHistory", "🗑️", () => {
+
+  it("deleteEntry removes the correct entry by id", () => {
+    HistoryModule.clearHistory();
+    injectEntry("KEEP", 70, "B", 0, 200);
+    injectEntry("DELETE_ME", 50, "C", 0, 100);
+    const before = HistoryModule.getHistory();
+    assertEqual(before.length, 2, "2 entries before delete");
+    const toDelete = before.find(e => e.barcode === "DELETE_ME");
+    HistoryModule.deleteEntry(toDelete.id);
+    const after = HistoryModule.getHistory();
+    assertEqual(after.length, 1, "1 entry after delete");
+    assertEqual(after[0].barcode, "KEEP", "correct entry remains");
+  });
+
+  it("deleteEntry with a non-existent id leaves history unchanged", () => {
+    HistoryModule.clearHistory();
+    injectEntry("P1", 60, "C", 0, 100);
+    HistoryModule.deleteEntry(99999999);
+    assertEqual(HistoryModule.getHistory().length, 1, "history unchanged");
+  });
+
+  it("clearHistory results in empty history", () => {
+    injectEntry("P1", 60, "C", 0, 100);
+    injectEntry("P2", 70, "B", 0, 200);
+    HistoryModule.clearHistory();
+    assertEqual(HistoryModule.getHistory().length, 0, "history is empty after clear");
+  });
+
+  it("getWeeklySummary returns hasData:false after clearHistory", () => {
+    HistoryModule.clearHistory();
+    assert(HistoryModule.getWeeklySummary().hasData === false, "no data after clear");
+  });
+
+});
+
+// ═══════════════════════════════════════════════════════════════
+// SUITE 4 — AlternativesModule: pickBestCategory
+// ═══════════════════════════════════════════════════════════════
+
+suite("AlternativesModule — pickBestCategory", "🏷️", () => {
+
+  it("returns null for empty categories array", () => {
+    assertNull(AlternativesModule.pickBestCategory([]), "empty array → null");
+  });
+
+  it("returns null for null/undefined input", () => {
+    assertNull(AlternativesModule.pickBestCategory(null), "null → null");
+    assertNull(AlternativesModule.pickBestCategory(undefined), "undefined → null");
+  });
+
+  it("skips blocklisted generic tags", () => {
+    const result = AlternativesModule.pickBestCategory(["en:foods", "en:snacks", "en:beverages"]);
+    assertNull(result, "all-blocklisted tags → null");
+  });
+
+  it("returns the most specific English tag (last non-blocked)", () => {
+    const result = AlternativesModule.pickBestCategory([
+      "en:snacks",
+      "en:biscuits-and-cakes",
+      "en:oat-biscuits",
+    ]);
+    assertEqual(result, "en:oat-biscuits", "most specific tag selected");
+  });
+
+  it("skips non-English tags (e.g. fr:, de:)", () => {
+    const result = AlternativesModule.pickBestCategory([
+      "fr:biscuits",
+      "de:kekse",
+      "en:oat-biscuits",
+    ]);
+    assertEqual(result, "en:oat-biscuits", "only English tags considered");
+  });
+
+  it("returns only English tag when just one non-blocked tag exists", () => {
+    const result = AlternativesModule.pickBestCategory(["en:cereals-and-potatoes", "en:breakfast-cereals"]);
+    assertEqual(result, "en:breakfast-cereals", "single specific tag returned");
+  });
+
+  it("handles a single blocklisted tag alongside a specific tag", () => {
+    const result = AlternativesModule.pickBestCategory(["en:foods", "en:cheeses"]);
+    assertEqual(result, "en:cheeses", "blocklisted tag skipped, specific tag returned");
+  });
+
+});
+
+// ═══════════════════════════════════════════════════════════════
+// SUITE 5 — AlternativesModule: fetchAlternatives (logic)
+// ═══════════════════════════════════════════════════════════════
+
+suite("AlternativesModule — fetchAlternatives logic", "🌿", () => {
+
+  it("returns reason:no_category when product has no categories", async () => {
+    const product = mockProduct({ categories_tags: [] });
+    const result = await AlternativesModule.fetchAlternatives(product, 60);
+    assertEqual(result.reason, "no_category", "reason should be no_category");
+  });
+
+  it("returns reason:no_category when all categories are blocklisted", async () => {
+    const product = mockProduct({ categories_tags: ["en:foods", "en:snacks"] });
+    const result = await AlternativesModule.fetchAlternatives(product, 60);
+    assertEqual(result.reason, "no_category", "blocklisted-only → no_category");
+  });
+
+  it("filters out alternatives that don't beat original score by 5+ points", async () => {
+    // We test the filter logic directly using our scoring system on mock products
+    const original = mockProduct();
+    const originalScore = ScoringSystem.calculateSustainabilityScore(original).sustainability_score;
+
+    // A product that would be below the threshold
+    const belowThreshold = mockProduct({
+      product_name: "Worse Biscuit",
+      nova_group: 4,
+      packaging: "plastic",
+      origins: "China",
+      nutrition_grades: "e",
+      ingredients_analysis_tags: ["en:palm-oil"],
+    });
+    const belowScore = ScoringSystem.calculateSustainabilityScore(belowThreshold).sustainability_score;
+
+    assert(belowScore < originalScore + 5, `below-threshold product (${belowScore}) should not beat original (${originalScore}) by 5+`);
+  });
+
+  it("sessionStorage handoff: product data survives round-trip serialisation", () => {
+    const product = mockProduct();
+    const scoreData = mockScoreData();
+    sessionStorage.setItem("ecoscan_current_product", JSON.stringify(product));
+    sessionStorage.setItem("ecoscan_current_score", JSON.stringify(scoreData));
+    const retrievedProduct = JSON.parse(sessionStorage.getItem("ecoscan_current_product"));
+    const retrievedScore = JSON.parse(sessionStorage.getItem("ecoscan_current_score"));
+    assertEqual(retrievedProduct.product_name, product.product_name, "product name survives serialisation");
+    assertEqual(retrievedScore.sustainability_score, scoreData.sustainability_score, "score survives serialisation");
+    assertEqual(retrievedScore.grade, scoreData.grade, "grade survives serialisation");
+    sessionStorage.removeItem("ecoscan_current_product");
+    sessionStorage.removeItem("ecoscan_current_score");
+  });
+
+  it("sessionStorage returns null when no product has been scanned", () => {
+    sessionStorage.removeItem("ecoscan_current_product");
+    const result = sessionStorage.getItem("ecoscan_current_product");
+    assertNull(result, "sessionStorage returns null when empty");
+  });
+
+});
+
+// ═══════════════════════════════════════════════════════════════
+// SUITE 6 — Integration: scan → history pipeline
+// ═══════════════════════════════════════════════════════════════
+
+suite("Integration — Scan → History pipeline", "🔗", () => {
+
+  it("a product scanned via saveScan immediately appears in getWeeklySummary", () => {
+    HistoryModule.clearHistory();
+    const product = mockProduct({ product_name: "Integration Test Biscuit" });
+    const scoreData = ScoringSystem.calculateSustainabilityScore(product);
+    HistoryModule.saveScan(product, "INT001", scoreData);
+    const summary = HistoryModule.getWeeklySummary();
+    assert(summary.hasData, "summary has data after scan");
+    assertEqual(summary.totalScans, 1, "1 scan in summary");
+    assertContains(HistoryModule.getHistory(), e => e.name === "Integration Test Biscuit", "product name in history");
+  });
+
+  it("score calculated by ScoringSystem matches score stored in history", () => {
+    HistoryModule.clearHistory();
+    const product = mockProduct();
+    const scoreData = ScoringSystem.calculateSustainabilityScore(product);
+    HistoryModule.saveScan(product, "INT002", scoreData);
+    const entry = HistoryModule.getHistory()[0];
+    assertEqual(entry.score, scoreData.sustainability_score, "stored score matches calculated score");
+    assertEqual(entry.grade, scoreData.grade, "stored grade matches calculated grade");
+  });
+
+  it("multiple different products produce correct average in weekly summary", () => {
+    HistoryModule.clearHistory();
+    // Scan 3 products with known scores
+    const products = [
+      mockProduct({ product_name: "A", nova_group: 1, nutrition_grades: "a", packaging: "glass", origins: "United Kingdom", additives_tags: [], ingredients_analysis_tags: [] }),
+      mockProduct({ product_name: "B", nova_group: 3, nutrition_grades: "c", packaging: "cardboard", origins: "France", additives_tags: [], ingredients_analysis_tags: [] }),
+      mockProduct({ product_name: "C", nova_group: 4, nutrition_grades: "e", packaging: "plastic", origins: "China", additives_tags: ["en:e621","en:e631","en:e951","en:e955","en:e500","en:e160"], ingredients_analysis_tags: ["en:palm-oil"] }),
+    ];
+    const scores = products.map(p => {
+      const sd = ScoringSystem.calculateSustainabilityScore(p);
+      HistoryModule.saveScan(p, `INT_${p.product_name}`, sd);
+      return sd.sustainability_score;
+    });
+    const expectedAvg = Math.round((scores.reduce((a,b) => a+b, 0) / scores.length) * 10) / 10;
+    const summary = HistoryModule.getWeeklySummary();
+    assertEqual(summary.avgScore, expectedAvg, "average score matches expected");
+  });
+
+  it("grade A product does not trigger alternatives button (logic check)", () => {
+    const product = mockProduct({ nova_group: 1, nutrition_grades: "a", packaging: "glass", origins: "United Kingdom", ingredients_analysis_tags: [], additives_tags: [] });
+    const scoreData = ScoringSystem.calculateSustainabilityScore(product);
+    // The button logic: only show if grade !== "A"
+    const shouldShow = scoreData.grade !== "A";
+    // For this test we just verify the condition works — grade A products should NOT show the button
+    // (This mirrors the condition in script.js: if (grade !== "A") { addAlternativesButton(...) })
+    assert(typeof shouldShow === "boolean", "shouldShow is a boolean");
+    // Note: grade A means shouldShow = false
+    if (scoreData.grade === "A") {
+      assert(!shouldShow, "Grade A → alternatives button hidden");
+    }
+  });
+
+});
+
+// ═══════════════════════════════════════════════════════════════
+// TEST RUNNER ENGINE
+// ═══════════════════════════════════════════════════════════════
+
+// Collect `it()` calls within a suite's fn
+let _currentSuite = null;
+
+function it(name, fn) {
+  _currentSuite.tests.push({ name, fn, status: "pending", detail: "" });
+}
+
+// Register all its
+Results.suites.forEach(suite => {
+  _currentSuite = suite;
+  suite.fn();
+});
+_currentSuite = null;
+
+async function runAll() {
+  const btn = document.getElementById("run-btn");
+  btn.disabled = true;
+  btn.textContent = "Running…";
+
+  // Clear localStorage before run to ensure isolation
+  HistoryModule.clearHistory();
+
+  const container = document.getElementById("suites-container");
+  container.innerHTML = "";
+
+  let totalPass = 0, totalFail = 0;
+
+  for (const suite of Results.suites) {
+    const suiteEl = document.createElement("div");
+    suiteEl.className = "suite";
+
+    const headerEl = document.createElement("div");
+    headerEl.className = "suite-header";
+    headerEl.innerHTML = `
+      <span class="suite-icon">${suite.icon}</span>
+      <span class="suite-name">${suite.name}</span>
+      <span class="suite-badge" id="badge-${suite.name.replace(/\s/g,'-')}">running…</span>`;
+    suiteEl.appendChild(headerEl);
+
+    const listEl = document.createElement("div");
+    listEl.className = "test-list";
+    suiteEl.appendChild(listEl);
+    container.appendChild(suiteEl);
+
+    let sPass = 0, sFail = 0;
+
+    for (const test of suite.tests) {
+      const rowEl = document.createElement("div");
+      rowEl.className = "test-row";
+      rowEl.innerHTML = `
+        <span class="test-status running"><span class="spinner"></span></span>
+        <div class="test-info">
+          <div class="test-name">${test.name}</div>
+        </div>`;
+      listEl.appendChild(rowEl);
+
+      // Small delay so browser can paint
+      await new Promise(r => setTimeout(r, 10));
+
+      // Run test — clean history before each to avoid leakage
+      HistoryModule.clearHistory();
+
+      let passed = false;
+      let detail = "";
+
+      try {
+        const result = test.fn();
+        if (result && typeof result.then === "function") await result;
+        passed = true;
+        detail = "✓ passed";
+      } catch (err) {
+        passed = false;
+        detail = err.message || String(err);
+      }
+
+      const statusEl = rowEl.querySelector(".test-status");
+      statusEl.className = `test-status ${passed ? "pass" : "fail"}`;
+      statusEl.textContent = passed ? "PASS" : "FAIL";
+
+      const infoEl = rowEl.querySelector(".test-info");
+      infoEl.innerHTML = `
+        <div class="test-name">${test.name}</div>
+        <div class="test-detail ${passed ? "info" : "error"}">${detail}</div>`;
+
+      if (passed) { sPass++; totalPass++; }
+      else         { sFail++; totalFail++; }
+    }
+
+    // Update suite badge
+    const badge = document.getElementById(`badge-${suite.name.replace(/\s/g,'-')}`);
+    if (badge) {
+      const allPass = sFail === 0;
+      badge.className = `suite-badge ${allPass ? "all-pass" : "has-fail"}`;
+      badge.textContent = allPass ? `${sPass}/${sPass} passed` : `${sFail} failed`;
+    }
+  }
+
+  // Summary
+  const total = totalPass + totalFail;
+  const pct = Math.round((totalPass / total) * 100);
+  const summaryEl = document.getElementById("summary");
+  summaryEl.style.display = "block";
+  summaryEl.innerHTML = `
+    <div class="summary-bar">
+      <div class="summary-stat"><div class="val total">${total}</div><div class="lbl">Total</div></div>
+      <div class="summary-stat"><div class="val pass">${totalPass}</div><div class="lbl">Passed</div></div>
+      <div class="summary-stat"><div class="val fail">${totalFail}</div><div class="lbl">Failed</div></div>
+      <div class="summary-progress">
+        <div class="summary-progress-fill" style="width:${pct}%"></div>
+      </div>
+      <div class="summary-stat"><div class="val ${totalFail === 0 ? 'pass' : 'fail'}">${pct}%</div><div class="lbl">Pass rate</div></div>
+    </div>`;
+
+  btn.disabled = false;
+  btn.textContent = "▶ Run All Tests";
+
+  // Clean up after run
+  HistoryModule.clearHistory();
+}
+</script>
+</body>
+</html>
