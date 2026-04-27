@@ -114,26 +114,86 @@ const ScoringSystem = (() => {
       ? origins.join(" ").toLowerCase()
       : origins.toLowerCase();
 
-    // Simple proxy logic (assuming US-based user for demo)
+    // UK-centric proximity tiers
+    // Tier 1 — UK domestic (lowest food miles)
+    const ukDomestic = [
+      "united kingdom",
+      "uk",
+      "great britain",
+      "england",
+      "scotland",
+      "wales",
+      "northern ireland",
+      "local",
+      "domestic",
+    ];
+    // Tier 2 — Near Europe (short sea crossing, low transport emissions)
+    const nearEurope = [
+      "ireland",
+      "france",
+      "netherlands",
+      "belgium",
+      "germany",
+      "denmark",
+      "spain",
+      "portugal",
+      "italy",
+      "luxembourg",
+      "switzerland",
+      "austria",
+      "europe",
+    ];
+    // Tier 3 — Wider Europe / North Africa (longer but still moderate emissions)
+    const widerEurope = [
+      "norway",
+      "sweden",
+      "finland",
+      "poland",
+      "czech",
+      "hungary",
+      "greece",
+      "turkey",
+      "morocco",
+      "tunisia",
+      "egypt",
+      "north africa",
+    ];
+
     let score = 30; // Default for unknown
     let imported = true;
 
-    if (
+    if (ukDomestic.some((t) => originsText.includes(t))) {
+      score = 90; // UK domestic
+      imported = false;
+    } else if (nearEurope.some((t) => originsText.includes(t))) {
+      score = 68; // Near Europe — short sea crossing
+    } else if (widerEurope.some((t) => originsText.includes(t))) {
+      score = 50; // Wider Europe
+    } else if (
       originsText.includes("united states") ||
       originsText.includes("usa") ||
-      originsText.includes("local") ||
-      originsText.includes("domestic")
-    ) {
-      score = 85; // Local/same country
-      imported = false;
-    } else if (
       originsText.includes("canada") ||
-      originsText.includes("mexico") ||
+      originsText.includes("australia") ||
+      originsText.includes("new zealand") ||
+      originsText.includes("brazil") ||
+      originsText.includes("argentina") ||
+      originsText.includes("chile") ||
+      originsText.includes("south america") ||
       originsText.includes("north america")
     ) {
-      score = 60; // Same continent
+      score = 28; // Long-haul intercontinental
+    } else if (
+      originsText.includes("china") ||
+      originsText.includes("india") ||
+      originsText.includes("thailand") ||
+      originsText.includes("indonesia") ||
+      originsText.includes("malaysia") ||
+      originsText.includes("vietnam") ||
+      originsText.includes("asia")
+    ) {
+      score = 18; // Long-haul Asia (often associated with palm oil supply chains)
     } else {
-      score = 35; // Intercontinental
+      score = 35; // Known but unclassified origin
     }
 
     return { score, missing: false, imported };
@@ -263,21 +323,43 @@ const ScoringSystem = (() => {
       ? origins.join(" ").toLowerCase()
       : origins.toLowerCase();
 
-    // Specific countries
+    // Specific countries — UK-relevant list expanded
     const specificCountries = [
+      "united kingdom",
+      "uk",
+      "great britain",
+      "england",
+      "scotland",
+      "wales",
+      "northern ireland",
+      "ireland",
+      "france",
+      "germany",
+      "netherlands",
+      "belgium",
+      "denmark",
+      "spain",
+      "portugal",
+      "italy",
+      "switzerland",
+      "austria",
+      "sweden",
+      "norway",
+      "finland",
+      "poland",
+      "turkey",
+      "morocco",
+      "egypt",
       "united states",
       "usa",
       "canada",
-      "mexico",
-      "france",
-      "germany",
-      "italy",
-      "spain",
       "china",
-      "japan",
       "india",
-      "brazil",
+      "japan",
       "australia",
+      "new zealand",
+      "brazil",
+      "argentina",
     ];
     for (const country of specificCountries) {
       if (originsText.includes(country)) return 0.8;

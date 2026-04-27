@@ -78,6 +78,62 @@
         padding: 28px 20px 60px;
       }
 
+      /* ── Responsive ── */
+      @media (max-width: 600px) {
+        header {
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 10px;
+          padding: 14px 16px;
+        }
+
+        .header-brand h1 { font-size: 1.3em; }
+
+        nav { display: flex; gap: 0; margin-top: 0; }
+        nav a { margin-left: 0; margin-right: 14px; font-size: 0.82em; }
+
+        .page { padding: 16px 12px 60px; }
+        .page-title { font-size: 1.5em; }
+
+        .summary-row { grid-template-columns: 1fr 1fr; gap: 10px; }
+        .stat-value { font-size: 1.8em; }
+
+        /* Stack grade distribution + sparkline */
+        .page [style*="grid-template-columns:1fr 1fr"] {
+          display: flex !important;
+          flex-direction: column;
+          gap: 14px;
+        }
+
+        .two-col { grid-template-columns: 1fr; gap: 12px; }
+
+        .flags-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
+        .flag-chip { padding: 8px 10px; }
+
+        .section-card { padding: 16px; }
+
+        .tab-btn { padding: 8px 12px; font-size: 0.82em; }
+
+        .shortlist-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
+
+        .history-controls { flex-direction: column; align-items: flex-start; gap: 10px; }
+      }
+
+      @media (min-width: 601px) and (max-width: 900px) {
+        header { padding: 14px 20px; }
+        .header-brand h1 { font-size: 1.4em; }
+        nav a { margin-left: 14px; }
+        .page { padding: 20px 16px 60px; }
+        .page-title { font-size: 1.7em; }
+        .flags-grid { grid-template-columns: repeat(3, 1fr); }
+        .shortlist-grid { grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); }
+
+        /* Stack grade + sparkline on tablet too */
+        .page [style*="grid-template-columns:1fr 1fr"] {
+          grid-template-columns: 1fr !important;
+        }
+      }
+
       .page-title {
         font-family: "DM Serif Display", serif;
         font-size: 2em;
@@ -135,7 +191,7 @@
       /* ── Summary cards row ── */
       .summary-row {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
         gap: 16px;
         margin-bottom: 24px;
       }
