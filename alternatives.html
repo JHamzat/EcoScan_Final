@@ -1,0 +1,647 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>EcoScan — Greener Alternatives</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --green-dark: #1a3a0a;
+        --green-mid: #2d5016;
+        --green-bright: #4caf50;
+        --green-light: #e8f5e9;
+        --amber: #ff9800;
+        --red: #e53935;
+        --text: #1c1c1c;
+        --muted: #6b7280;
+        --surface: #ffffff;
+        --bg: #f4f7f2;
+        --border: #e0e8dc;
+        --grade-a: #2e7d32;
+        --grade-b: #558b2f;
+        --grade-c: #f9a825;
+        --grade-d: #ef6c00;
+        --grade-e: #c62828;
+      }
+
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+
+      body {
+        font-family: "DM Sans", sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        min-height: 100vh;
+      }
+
+      header {
+        background: linear-gradient(135deg, var(--green-dark) 0%, var(--green-mid) 100%);
+        color: white;
+        padding: 18px 24px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.15);
+      }
+
+      .header-brand {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        text-decoration: none;
+        color: white;
+      }
+
+      .header-brand h1 { font-family: "DM Serif Display", serif; font-size: 1.6em; }
+
+      nav a {
+        color: rgba(255,255,255,0.85);
+        text-decoration: none;
+        margin-left: 20px;
+        font-size: 0.9em;
+        font-weight: 500;
+        transition: color 0.2s;
+      }
+
+      nav a:hover, nav a.active { color: white; }
+
+      .page {
+        max-width: 860px;
+        margin: 0 auto;
+        padding: 28px 20px 60px;
+      }
+
+      /* ── Original product banner ── */
+      .original-banner {
+        background: var(--surface);
+        border-radius: 14px;
+        padding: 20px 24px;
+        margin-bottom: 24px;
+        border: 1px solid var(--border);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        display: flex;
+        align-items: center;
+        gap: 16px;
+      }
+
+      .original-banner img {
+        width: 56px;
+        height: 56px;
+        object-fit: contain;
+        border-radius: 8px;
+        background: var(--bg);
+        flex-shrink: 0;
+      }
+
+      .original-no-img {
+        width: 56px;
+        height: 56px;
+        background: var(--bg);
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.8em;
+        flex-shrink: 0;
+      }
+
+      .original-info { flex: 1; min-width: 0; }
+
+      .original-label {
+        font-size: 0.7em;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: var(--muted);
+        margin-bottom: 2px;
+      }
+
+      .original-name {
+        font-weight: 700;
+        font-size: 1em;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .original-brand { font-size: 0.82em; color: var(--muted); margin-top: 2px; }
+
+      .original-score {
+        flex-shrink: 0;
+        text-align: center;
+      }
+
+      .score-circle {
+        width: 58px;
+        height: 58px;
+        border-radius: 50%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        border: 3px solid;
+      }
+
+      .score-circle .num {
+        font-family: "DM Serif Display", serif;
+        font-size: 1.15em;
+        line-height: 1;
+      }
+
+      .score-circle .lbl {
+        font-size: 0.55em;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        margin-top: 1px;
+      }
+
+      /* ── Section heading ── */
+      .section-heading {
+        font-family: "DM Serif Display", serif;
+        font-size: 1.5em;
+        color: var(--green-mid);
+        margin-bottom: 6px;
+      }
+
+      .section-sub {
+        font-size: 0.88em;
+        color: var(--muted);
+        margin-bottom: 20px;
+      }
+
+      /* ── Loading ── */
+      .loading-card {
+        background: var(--surface);
+        border-radius: 14px;
+        padding: 50px 20px;
+        text-align: center;
+        border: 1px solid var(--border);
+      }
+
+      .spinner {
+        width: 36px;
+        height: 36px;
+        border: 3px solid var(--border);
+        border-top-color: var(--green-bright);
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+        margin: 0 auto 16px;
+      }
+
+      @keyframes spin { to { transform: rotate(360deg); } }
+
+      .loading-card p { color: var(--muted); font-size: 0.9em; }
+
+      /* ── Alternatives grid ── */
+      .alt-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+        gap: 16px;
+      }
+
+      .alt-card {
+        background: var(--surface);
+        border-radius: 14px;
+        border: 1px solid var(--border);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        transition: transform 0.2s, box-shadow 0.2s;
+        position: relative;
+      }
+
+      .alt-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+      }
+
+      /* Green top accent that fills proportionally to score improvement */
+      .alt-card-accent {
+        height: 5px;
+        background: linear-gradient(90deg, var(--green-bright), #388e3c);
+      }
+
+      .improvement-badge {
+        position: absolute;
+        top: 14px;
+        right: 14px;
+        background: var(--green-mid);
+        color: white;
+        font-size: 0.7em;
+        font-weight: 700;
+        padding: 3px 8px;
+        border-radius: 20px;
+      }
+
+      .alt-card-img {
+        width: 80px;
+        height: 80px;
+        object-fit: contain;
+        display: block;
+        margin: 20px auto 0;
+        border-radius: 8px;
+        background: var(--bg);
+      }
+
+      .alt-card-no-img {
+        width: 80px;
+        height: 80px;
+        background: var(--bg);
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2.2em;
+        margin: 20px auto 0;
+      }
+
+      .alt-card-body { padding: 16px; flex: 1; display: flex; flex-direction: column; }
+
+      .alt-card-name {
+        font-weight: 700;
+        font-size: 0.92em;
+        margin-bottom: 2px;
+        /* Clamp to 2 lines */
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+      }
+
+      .alt-card-brand { font-size: 0.78em; color: var(--muted); margin-bottom: 14px; }
+
+      /* Score row */
+      .score-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 12px;
+      }
+
+      .grade-pill {
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 0.95em;
+        color: white;
+        flex-shrink: 0;
+      }
+
+      .score-bar-wrap {
+        flex: 1;
+        height: 8px;
+        background: var(--bg);
+        border-radius: 6px;
+        overflow: hidden;
+      }
+
+      .score-bar-fill {
+        height: 100%;
+        border-radius: 6px;
+        transition: width 0.5s ease;
+      }
+
+      .score-num-small {
+        font-family: "DM Serif Display", serif;
+        font-size: 1.1em;
+        flex-shrink: 0;
+      }
+
+      /* Factor pills */
+      .factor-pills { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 14px; }
+
+      .factor-pill {
+        font-size: 0.68em;
+        font-weight: 600;
+        padding: 3px 8px;
+        border-radius: 20px;
+        background: var(--bg);
+        color: var(--muted);
+        border: 1px solid var(--border);
+      }
+
+      .factor-pill.good { background: #e8f5e9; color: #2e7d32; border-color: #c8e6c9; }
+      .factor-pill.warn { background: #fff8e1; color: #f57f17; border-color: #ffe082; }
+
+      /* Empty / error states */
+      .state-card {
+        background: var(--surface);
+        border-radius: 14px;
+        padding: 50px 30px;
+        text-align: center;
+        border: 1px solid var(--border);
+      }
+
+      .state-card .icon { font-size: 3em; margin-bottom: 12px; }
+      .state-card h3 { font-size: 1.1em; color: var(--green-mid); margin-bottom: 8px; }
+      .state-card p { color: var(--muted); font-size: 0.9em; line-height: 1.6; }
+
+      /* Buttons */
+      .btn {
+        display: inline-block;
+        padding: 11px 24px;
+        background: linear-gradient(135deg, var(--green-bright), #388e3c);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-size: 0.9em;
+        font-weight: 600;
+        cursor: pointer;
+        text-decoration: none;
+        transition: transform 0.2s, box-shadow 0.2s;
+        box-shadow: 0 3px 10px rgba(76,175,80,0.25);
+        margin-top: 16px;
+      }
+
+      .btn:hover { transform: translateY(-2px); box-shadow: 0 5px 16px rgba(76,175,80,0.35); }
+
+      .category-tag {
+        display: inline-block;
+        background: var(--green-light);
+        color: var(--green-mid);
+        font-size: 0.75em;
+        font-weight: 600;
+        padding: 4px 10px;
+        border-radius: 20px;
+        margin-bottom: 20px;
+        border: 1px solid #c8e6c9;
+      }
+
+      footer {
+        text-align: center;
+        padding: 24px;
+        color: var(--muted);
+        font-size: 0.85em;
+        border-top: 1px solid var(--border);
+        margin-top: 20px;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <a class="header-brand" href="index.html">
+        <span>🌱</span>
+        <h1>EcoScan</h1>
+      </a>
+      <nav>
+        <a href="scan.html">Scan</a>
+        <a href="history.html">My Impact</a>
+        <a href="alternatives.html" class="active">Alternatives</a>
+      </nav>
+    </header>
+
+    <div class="page">
+      <div id="content">
+        <!-- Populated by JS -->
+      </div>
+    </div>
+
+    <footer>
+      <p>EcoScan &mdash; Making sustainability simple, one scan at a time.</p>
+    </footer>
+
+    <script src="scoring.js"></script>
+    <script src="alternatives.js"></script>
+    <script>
+      // ── Colour helpers ────────────────────────────────────────────────────
+
+      function gradeColor(grade) {
+        return { A:"#2e7d32", B:"#558b2f", C:"#f9a825", D:"#ef6c00", E:"#c62828" }[grade] || "#999";
+      }
+
+      function scoreColor(score) {
+        if (score >= 80) return "#2e7d32";
+        if (score >= 65) return "#558b2f";
+        if (score >= 50) return "#f9a825";
+        if (score >= 35) return "#ef6c00";
+        return "#c62828";
+      }
+
+      function categoryLabel(tag) {
+        // "en:biscuits-and-cakes" → "Biscuits and cakes"
+        return tag.replace(/^[a-z]{2}:/, "").replace(/-/g, " ")
+          .replace(/\b\w/g, (c) => c.toUpperCase());
+      }
+
+      // ── Factor highlights for a product ──────────────────────────────────
+
+      function factorPills(scoreData) {
+        const pills = [];
+        const f = scoreData.flags || {};
+        const fs = scoreData.factor_scores || {};
+
+        if (!f.palm_oil && !f.high_additives && fs.ingredient?.score >= 70)
+          pills.push({ text: "Clean ingredients", good: true });
+        if (!f.plastic_packaging && fs.packaging?.score >= 70)
+          pills.push({ text: "Eco packaging", good: true });
+        if (!f.ultra_processed && fs.processing?.score >= 75)
+          pills.push({ text: "Minimally processed", good: true });
+        if (!f.imported && fs.origin?.score >= 70)
+          pills.push({ text: "Local origin", good: true });
+        if (f.palm_oil)
+          pills.push({ text: "Contains palm oil", good: false });
+        if (f.plastic_packaging)
+          pills.push({ text: "Plastic packaging", good: false });
+
+        return pills.slice(0, 4); // cap at 4
+      }
+
+      // ── Render original product banner ────────────────────────────────────
+
+      function renderOriginalBanner(product, scoreData) {
+        const name = product.product_name || "Unknown Product";
+        const brand = product.brands || "";
+        const img = product.image_small_url || product.image_url || null;
+        const score = scoreData.sustainability_score;
+        const grade = scoreData.grade;
+        const color = scoreColor(score);
+
+        const imgHtml = img
+          ? `<img src="${img}" alt="${name}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
+            + `<div class="original-no-img" style="display:none">📦</div>`
+          : `<div class="original-no-img">📦</div>`;
+
+        return `
+          <div class="original-banner">
+            ${imgHtml}
+            <div class="original-info">
+              <div class="original-label">You scanned</div>
+              <div class="original-name">${name}</div>
+              ${brand ? `<div class="original-brand">${brand}</div>` : ""}
+            </div>
+            <div class="original-score">
+              <div class="score-circle" style="border-color:${color};color:${color}">
+                <span class="num">${score}</span>
+                <span class="lbl">Grade ${grade}</span>
+              </div>
+            </div>
+          </div>`;
+      }
+
+      // ── Render a single alternative card ─────────────────────────────────
+
+      function renderAltCard(alt, originalScore) {
+        const { product, scoreData } = alt;
+        const name = product.product_name || "Unknown";
+        const brand = product.brands || "";
+        const img = product.image_small_url || null;
+        const score = scoreData.sustainability_score;
+        const grade = scoreData.grade;
+        const color = scoreColor(score);
+        const improvement = Math.round(score - originalScore);
+
+        const imgHtml = img
+          ? `<img class="alt-card-img" src="${img}" alt="${name}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
+            + `<div class="alt-card-no-img" style="display:none">📦</div>`
+          : `<div class="alt-card-no-img">📦</div>`;
+
+        const pills = factorPills(scoreData);
+        const pillsHtml = pills.map(p =>
+          `<span class="factor-pill ${p.good ? "good" : "warn"}">${p.text}</span>`
+        ).join("");
+
+        return `
+          <div class="alt-card">
+            <div class="alt-card-accent"></div>
+            <div class="improvement-badge">+${improvement} pts</div>
+            ${imgHtml}
+            <div class="alt-card-body">
+              <div class="alt-card-name">${name}</div>
+              <div class="alt-card-brand">${brand}</div>
+              <div class="score-row">
+                <div class="grade-pill" style="background:${color}">${grade}</div>
+                <div class="score-bar-wrap">
+                  <div class="score-bar-fill" style="width:${score}%;background:${color}"></div>
+                </div>
+                <div class="score-num-small" style="color:${color}">${score}</div>
+              </div>
+              ${pills.length > 0 ? `<div class="factor-pills">${pillsHtml}</div>` : ""}
+            </div>
+          </div>`;
+      }
+
+      // ── Main render ───────────────────────────────────────────────────────
+
+      async function render() {
+        const container = document.getElementById("content");
+
+        // Read state passed via sessionStorage
+        let product, scoreData;
+        try {
+          product = JSON.parse(sessionStorage.getItem("ecoscan_current_product") || "null");
+          scoreData = JSON.parse(sessionStorage.getItem("ecoscan_current_score") || "null");
+        } catch { product = null; scoreData = null; }
+
+        // No product passed — show guidance
+        if (!product || !scoreData) {
+          container.innerHTML = `
+            <div class="state-card">
+              <div class="icon">🔍</div>
+              <h3>No product selected</h3>
+              <p>Scan a product first, then tap <strong>"Find Greener Alternatives"</strong> on the result screen to see better options here.</p>
+              <a href="scan.html" class="btn">📷 Go to Scanner</a>
+            </div>`;
+          return;
+        }
+
+        const originalScore = scoreData.sustainability_score;
+        const originalGrade = scoreData.grade;
+
+        // Render original banner immediately
+        container.innerHTML = renderOriginalBanner(product, scoreData);
+
+        // If product already scores A, tell the user
+        if (originalGrade === "A") {
+          container.innerHTML += `
+            <div class="state-card">
+              <div class="icon">🏆</div>
+              <h3>This is already a great choice!</h3>
+              <p>This product scored Grade A — it's one of the most sustainable options in its category. No swaps needed.</p>
+              <a href="scan.html" class="btn">🔄 Scan Another</a>
+            </div>`;
+          return;
+        }
+
+        // Show loading state
+        const category = AlternativesModule.pickBestCategory(product.categories_tags);
+        const catLabel = category ? categoryLabel(category) : "similar products";
+
+        container.innerHTML += `
+          <h2 class="section-heading">Greener Alternatives</h2>
+          <p class="section-sub">Searching for better options in <strong>${catLabel}</strong>…</p>
+          <div class="loading-card">
+            <div class="spinner"></div>
+            <p>Finding products that score higher than ${originalScore}/100</p>
+          </div>`;
+
+        // Fetch
+        const result = await AlternativesModule.fetchAlternatives(product, originalScore);
+
+        // Replace loading section
+        const loadingCard = container.querySelector(".loading-card");
+        const sectionSub = container.querySelector(".section-sub");
+
+        if (result.reason === "fetch_error") {
+          if (loadingCard) loadingCard.outerHTML = `
+            <div class="state-card">
+              <div class="icon">📡</div>
+              <h3>Could not load alternatives</h3>
+              <p>There was a problem connecting to the product database. Check your connection and try again.</p>
+              <a href="scan.html" class="btn">🔄 Try Again</a>
+            </div>`;
+          return;
+        }
+
+        if (result.reason === "no_category") {
+          if (loadingCard) loadingCard.outerHTML = `
+            <div class="state-card">
+              <div class="icon">🏷️</div>
+              <h3>Category not found</h3>
+              <p>This product doesn't have enough category information to find meaningful alternatives. Try a different product.</p>
+              <a href="scan.html" class="btn">📷 Scan Another</a>
+            </div>`;
+          return;
+        }
+
+        if (result.reason === "none_better" || result.alternatives.length === 0) {
+          if (loadingCard) loadingCard.outerHTML = `
+            <div class="state-card">
+              <div class="icon">🌿</div>
+              <h3>No clearly better alternatives found</h3>
+              <p>We couldn't find products in <strong>${catLabel}</strong> that significantly outperform this one. It may already be one of the better options available.</p>
+              <a href="scan.html" class="btn">🔄 Scan Another</a>
+            </div>`;
+          return;
+        }
+
+        // Update subtitle and render cards
+        if (sectionSub) {
+          sectionSub.innerHTML = `Found <strong>${result.alternatives.length}</strong> greener option${result.alternatives.length > 1 ? "s" : ""} in <strong>${catLabel}</strong>`;
+        }
+
+        const cardsHtml = result.alternatives.map(
+          (alt) => renderAltCard(alt, originalScore)
+        ).join("");
+
+        if (loadingCard) {
+          loadingCard.outerHTML = `<div class="alt-grid">${cardsHtml}</div>
+            <div style="text-align:center;margin-top:24px">
+              <a href="scan.html" class="btn">📷 Scan Another Product</a>
+            </div>`;
+        }
+      }
+
+      render();
+    </script>
+  </body>
+</html>

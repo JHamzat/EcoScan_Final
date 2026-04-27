@@ -449,6 +449,217 @@
         border-top: 1px solid var(--border);
         margin-top: 20px;
       }
+
+      /* ── Tabs ── */
+      .tab-bar {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 24px;
+        border-bottom: 2px solid var(--border);
+        padding-bottom: 0;
+      }
+
+      .tab-btn {
+        background: none;
+        border: none;
+        padding: 10px 18px;
+        font-family: "DM Sans", sans-serif;
+        font-size: 0.88em;
+        font-weight: 600;
+        color: var(--muted);
+        cursor: pointer;
+        border-bottom: 3px solid transparent;
+        margin-bottom: -2px;
+        transition: color 0.15s, border-color 0.15s;
+        display: flex;
+        align-items: center;
+        gap: 7px;
+      }
+
+      .tab-btn:hover { color: var(--text); }
+
+      .tab-btn.active {
+        color: var(--green-mid);
+        border-bottom-color: var(--green-bright);
+      }
+
+      .tab-count {
+        background: var(--green-bright);
+        color: white;
+        font-size: 0.7em;
+        font-weight: 700;
+        padding: 1px 6px;
+        border-radius: 10px;
+        min-width: 18px;
+        text-align: center;
+      }
+
+      .tab-count.zero { background: var(--border); color: var(--muted); }
+
+      /* ── Shortlist grid ── */
+      .shortlist-summary {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+        gap: 14px;
+        margin-bottom: 22px;
+      }
+
+      .shortlist-empty {
+        background: var(--surface);
+        border-radius: 14px;
+        padding: 50px 30px;
+        text-align: center;
+        border: 2px dashed var(--border);
+      }
+
+      .shortlist-empty .icon { font-size: 3em; margin-bottom: 14px; }
+      .shortlist-empty h3 { color: var(--green-mid); margin-bottom: 8px; }
+      .shortlist-empty p { color: var(--muted); font-size: 0.88em; line-height: 1.6; }
+
+      .shortlist-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 14px;
+      }
+
+      .shortlist-card {
+        background: var(--surface);
+        border-radius: 12px;
+        border: 1px solid var(--border);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        transition: transform 0.2s, box-shadow 0.2s;
+        position: relative;
+      }
+
+      .shortlist-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 16px rgba(0,0,0,0.09);
+      }
+
+      .shortlist-card-accent {
+        height: 4px;
+        background: linear-gradient(90deg, #f57c00, #e65100);
+      }
+
+      .shortlist-card img {
+        width: 64px;
+        height: 64px;
+        object-fit: contain;
+        display: block;
+        margin: 14px auto 0;
+        border-radius: 6px;
+        background: var(--bg);
+      }
+
+      .shortlist-card .no-img {
+        width: 64px;
+        height: 64px;
+        background: var(--bg);
+        border-radius: 6px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.8em;
+        margin: 14px auto 0;
+      }
+
+      .shortlist-card-body {
+        padding: 12px 14px 14px;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .shortlist-card-name {
+        font-weight: 700;
+        font-size: 0.85em;
+        margin-bottom: 2px;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        line-height: 1.35;
+      }
+
+      .shortlist-card-brand {
+        font-size: 0.75em;
+        color: var(--muted);
+        margin-bottom: 10px;
+      }
+
+      .shortlist-score-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-top: auto;
+      }
+
+      .shortlist-grade {
+        width: 28px;
+        height: 28px;
+        border-radius: 6px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 0.85em;
+        color: white;
+        flex-shrink: 0;
+      }
+
+      .shortlist-score-bar-wrap {
+        flex: 1;
+        height: 6px;
+        background: var(--bg);
+        border-radius: 4px;
+        overflow: hidden;
+      }
+
+      .shortlist-score-bar {
+        height: 100%;
+        border-radius: 4px;
+      }
+
+      .shortlist-score-num {
+        font-family: "DM Serif Display", serif;
+        font-size: 1em;
+        flex-shrink: 0;
+      }
+
+      .shortlist-remove {
+        position: absolute;
+        top: 8px;
+        right: 8px;
+        background: none;
+        border: none;
+        color: var(--border);
+        cursor: pointer;
+        font-size: 0.9em;
+        padding: 2px 5px;
+        border-radius: 4px;
+        transition: color 0.15s, background 0.15s;
+        line-height: 1;
+      }
+
+      .shortlist-remove:hover { color: var(--red); background: #fff0f0; }
+
+      .shortlist-controls {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 14px;
+      }
+
+      .shortlist-label {
+        font-size: 0.8em;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--muted);
+      }
     </style>
   </head>
   <body>
@@ -460,14 +671,32 @@
       <nav>
         <a href="scan.html">Scan</a>
         <a href="history.html" class="active">My Impact</a>
+        <a href="alternatives.html">Alternatives</a>
       </nav>
     </header>
 
     <div class="page">
       <h2 class="page-title">My Impact</h2>
-      <p class="page-subtitle">Your sustainability snapshot for the last 7 days</p>
 
-      <div id="content"></div>
+      <!-- Tab bar -->
+      <div class="tab-bar">
+        <button class="tab-btn active" id="tab-history" onclick="switchTab('history')">
+          📊 Weekly Impact
+        </button>
+        <button class="tab-btn" id="tab-shortlist" onclick="switchTab('shortlist')">
+          ⭐ Shortlist
+          <span class="tab-count zero" id="shortlist-count">0</span>
+        </button>
+      </div>
+
+      <div id="panel-history">
+        <p class="page-subtitle" style="margin-bottom:20px">Your sustainability snapshot for the last 7 days</p>
+        <div id="content"></div>
+      </div>
+
+      <div id="panel-shortlist" style="display:none">
+        <div id="shortlist-content"></div>
+      </div>
     </div>
 
     <footer>
@@ -739,6 +968,119 @@
 
       // ── Init ──────────────────────────────────────────────────────────────
       render();
+      updateShortlistBadge();
+
+      // ── Tab switching ─────────────────────────────────────────────────────
+      window.switchTab = function(tab) {
+        const isHistory = tab === "history";
+        document.getElementById("panel-history").style.display = isHistory ? "" : "none";
+        document.getElementById("panel-shortlist").style.display = isHistory ? "none" : "";
+        document.getElementById("tab-history").classList.toggle("active", isHistory);
+        document.getElementById("tab-shortlist").classList.toggle("active", !isHistory);
+        if (!isHistory) renderShortlist();
+      };
+
+      // ── Shortlist badge ───────────────────────────────────────────────────
+      function updateShortlistBadge() {
+        const count = ShortlistModule.getCount();
+        const badge = document.getElementById("shortlist-count");
+        if (!badge) return;
+        badge.textContent = count;
+        badge.className = `tab-count${count === 0 ? " zero" : ""}`;
+      }
+
+      // ── Shortlist render ──────────────────────────────────────────────────
+      function renderShortlist() {
+        const container = document.getElementById("shortlist-content");
+        const list = ShortlistModule.getList();
+        const summary = ShortlistModule.getSummary();
+
+        if (list.length === 0) {
+          container.innerHTML = `
+            <div class="shortlist-empty">
+              <div class="icon">⭐</div>
+              <h3>Your shortlist is empty</h3>
+              <p>After scanning a product, tap <strong>"Add to Shortlist"</strong> to save it here. Build a collection of your go-to sustainable products.</p>
+              <a href="scan.html" class="btn" style="margin-top:16px;display:inline-block">📷 Start Scanning</a>
+            </div>`;
+          return;
+        }
+
+        // Summary stats
+        const avgColor = scoreColor(summary.avgScore);
+        const summaryHtml = `
+          <div class="shortlist-summary">
+            <div class="stat-card">
+              <div class="stat-label">Saved Products</div>
+              <div class="stat-value blue">${summary.total}</div>
+              <div class="stat-sub">of 50 max</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-label">Avg Score</div>
+              <div class="stat-value" style="color:${avgColor}">${summary.avgScore}</div>
+              <div class="stat-sub">out of 100</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-label">Grade A Items</div>
+              <div class="stat-value" style="color:var(--grade-a)">${summary.gradeCounts.A}</div>
+              <div class="stat-sub">top performers</div>
+            </div>
+          </div>`;
+
+        // Cards
+        const cardsHtml = list.map(entry => {
+          const color = scoreColor(entry.score);
+          const imgHtml = entry.image
+            ? `<img src="${entry.image}" alt="${entry.name}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+               <div class="no-img" style="display:none">📦</div>`
+            : `<div class="no-img">📦</div>`;
+
+          return `
+            <div class="shortlist-card">
+              <div class="shortlist-card-accent"></div>
+              <button class="shortlist-remove" onclick="removeShortlistItem(${entry.id})" title="Remove from shortlist">✕</button>
+              ${imgHtml}
+              <div class="shortlist-card-body">
+                <div class="shortlist-card-name">${entry.name}</div>
+                <div class="shortlist-card-brand">${entry.brand}</div>
+                <div class="shortlist-score-row">
+                  <div class="shortlist-grade" style="background:${color}">${entry.grade}</div>
+                  <div class="shortlist-score-bar-wrap">
+                    <div class="shortlist-score-bar" style="width:${entry.score}%;background:${color}"></div>
+                  </div>
+                  <div class="shortlist-score-num" style="color:${color}">${entry.score}</div>
+                </div>
+              </div>
+            </div>`;
+        }).join("");
+
+        container.innerHTML = `
+          ${summaryHtml}
+          <div class="shortlist-controls">
+            <span class="shortlist-label">${list.length} saved product${list.length !== 1 ? "s" : ""}</span>
+            <button class="btn btn-ghost" onclick="confirmClearShortlist()">Clear shortlist</button>
+          </div>
+          <div class="shortlist-grid">${cardsHtml}</div>`;
+      }
+
+      window.removeShortlistItem = function(id) {
+        ShortlistModule.removeItem(id);
+        updateShortlistBadge();
+        renderShortlist();
+      };
+
+      window.confirmClearShortlist = function() {
+        if (confirm("Clear your entire shortlist? This cannot be undone.")) {
+          ShortlistModule.clearList();
+          updateShortlistBadge();
+          renderShortlist();
+        }
+      };
+
+      // If URL has ?tab=shortlist open that tab directly
+      if (new URLSearchParams(window.location.search).get("tab") === "shortlist") {
+        switchTab("shortlist");
+      }
     </script>
   </body>
 </html>

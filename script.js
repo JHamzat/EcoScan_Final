@@ -51,23 +51,27 @@ function displayProductInfo(product, barcode) {
 
   // Calculate sustainability score using the new scoring system
   const scoreData = ScoringSystem.calculateSustainabilityScore(product);
+
+  // Save to history
+  if (typeof HistoryModule !== "undefined") {
+    HistoryModule.saveScan(product, barcode, scoreData);
+  }
   const sustainabilityScore = scoreData.sustainability_score;
   const grade = scoreData.grade;
   const confidenceScore = scoreData.confidence_score;
   const confidenceGrade = scoreData.confidence_grade;
-  const interpretation =
-    ScoringSystem.getScoreInterpretation(sustainabilityScore);
+  const interpretation = ScoringSystem.getScoreInterpretation(sustainabilityScore);
 
   // Create tooltip content for confidence details
   const missingData = scoreData.flags.missing_data || [];
   const factorConfidence = scoreData.factor_confidence || {};
-
+  
   let tooltipParts = [];
-
+  
   if (missingData.length > 0) {
-    tooltipParts.push(`Missing data: ${missingData.join(", ")}`);
+    tooltipParts.push(`Missing data: ${missingData.join(', ')}`);
   }
-
+  
   // Check for partial confidence (not 1.0)
   const partialFactors = [];
   Object.entries(factorConfidence).forEach(([factor, confidence]) => {
@@ -75,15 +79,14 @@ function displayProductInfo(product, barcode) {
       partialFactors.push(factor);
     }
   });
-
+  
   if (partialFactors.length > 0) {
-    tooltipParts.push(`Partial data: ${partialFactors.join(", ")}`);
+    tooltipParts.push(`Partial data: ${partialFactors.join(', ')}`);
   }
-
-  const tooltipText =
-    tooltipParts.length > 0
-      ? tooltipParts.join(". ")
-      : "High data quality - all factors well-supported";
+  
+  const tooltipText = tooltipParts.length > 0 
+    ? tooltipParts.join('. ') 
+    : 'High data quality - all factors well-supported';
 
   const resultDiv = getResultDiv();
   if (resultDiv) {
@@ -142,7 +145,82 @@ function displayProductInfo(product, barcode) {
     `;
 
     addScanAgainButton();
+    addViewHistoryButton();
+    // Only show alternatives button if product isn't already grade A
+    if (grade !== "A") {
+      addAlternativesButton(product, scoreData);
+    }
+    addShortlistButton(product, barcode, scoreData);
   }
+}
+
+function addShortlistButton(product, barcode, scoreData) {
+  const resultDiv = getResultDiv();
+  if (!resultDiv || typeof ShortlistModule === "undefined") return;
+
+  const alreadySaved = ShortlistModule.isShortlisted(barcode);
+  const btn = document.createElement("button");
+  btn.className = "btn";
+  btn.id = "shortlist-btn";
+
+  function setAdded() {
+    btn.textContent = "✅ Saved to Shortlist";
+    btn.style.cssText = "display:block;margin:8px auto 0;width:100%;background:linear-gradient(135deg,#546e7a,#37474f);box-shadow:0 4px 15px rgba(84,110,122,0.3);cursor:default;";
+    btn.disabled = true;
+  }
+
+  function setReady() {
+    btn.textContent = "⭐ Add to Shortlist";
+    btn.style.cssText = "display:block;margin:8px auto 0;width:100%;background:linear-gradient(135deg,#f57c00,#e65100);box-shadow:0 4px 15px rgba(245,124,0,0.35);cursor:pointer;";
+    btn.disabled = false;
+  }
+
+  if (alreadySaved) {
+    setAdded();
+  } else {
+    setReady();
+    btn.onclick = () => {
+      const result = ShortlistModule.addItem(product, barcode, scoreData);
+      if (result.added) {
+        setAdded();
+      } else if (result.duplicate) {
+        setAdded(); // already there
+      } else if (result.full) {
+        btn.textContent = "⚠️ Shortlist full (50 items)";
+        btn.disabled = true;
+      }
+    };
+  }
+
+  resultDiv.appendChild(btn);
+}
+
+function addAlternativesButton(product, scoreData) {
+  const resultDiv = getResultDiv();
+  if (!resultDiv) return;
+  // Store product data for alternatives page via sessionStorage
+  try {
+    sessionStorage.setItem("ecoscan_current_product", JSON.stringify(product));
+    sessionStorage.setItem("ecoscan_current_score", JSON.stringify(scoreData));
+  } catch(e) { console.warn("Could not store product data", e); }
+
+  const btn = document.createElement("a");
+  btn.href = "alternatives.html";
+  btn.className = "btn";
+  btn.style.cssText = "display:block;margin:8px auto 0;background:linear-gradient(135deg,#388e3c,#1b5e20);box-shadow:0 4px 15px rgba(56,142,60,0.35);text-align:center;text-decoration:none;";
+  btn.textContent = "🌿 Find Greener Alternatives";
+  resultDiv.appendChild(btn);
+}
+
+function addViewHistoryButton() {
+  const resultDiv = getResultDiv();
+  if (!resultDiv) return;
+  const btn = document.createElement("a");
+  btn.href = "history.html";
+  btn.className = "btn";
+  btn.style.cssText = "display:block;margin:8px auto 0;background:linear-gradient(135deg,#1565c0,#0d47a1);box-shadow:0 4px 15px rgba(21,101,192,0.3);text-align:center;text-decoration:none;";
+  btn.textContent = "📊 View My Weekly Impact";
+  resultDiv.appendChild(btn);
 }
 
 function displayNotFound(barcode) {

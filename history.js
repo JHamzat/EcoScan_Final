@@ -179,3 +179,72 @@ const HistoryModule = (() => {
     deleteEntry,
   };
 })();
+
+// ═══════════════════════════════════════════════════════════════════════════
+// ShortlistModule — persists a curated list of favourite/saved products
+// ═══════════════════════════════════════════════════════════════════════════
+
+const ShortlistModule = (() => {
+  const KEY = "ecoscan_shortlist";
+  const MAX = 50;
+
+  function load() {
+    try { return JSON.parse(localStorage.getItem(KEY) || "[]"); }
+    catch { return []; }
+  }
+
+  function save(list) {
+    try { localStorage.setItem(KEY, JSON.stringify(list)); }
+    catch (e) { console.warn("ShortlistModule: save failed", e); }
+  }
+
+  // Add a product — returns {added: bool, duplicate: bool}
+  function addItem(product, barcode, scoreData) {
+    const list = load();
+    if (list.some(e => e.barcode === barcode)) {
+      return { added: false, duplicate: true };
+    }
+    if (list.length >= MAX) {
+      return { added: false, full: true };
+    }
+    list.unshift({
+      id: Date.now(),
+      addedAt: new Date().toISOString(),
+      barcode,
+      name: product.product_name || "Unknown Product",
+      brand: product.brands || "Unknown Brand",
+      image: product.image_small_url || product.image_url || null,
+      score: scoreData.sustainability_score,
+      grade: scoreData.grade,
+      flags: scoreData.flags,
+    });
+    save(list);
+    return { added: true };
+  }
+
+  function removeItem(id) {
+    save(load().filter(e => e.id !== id));
+  }
+
+  function getList() { return load(); }
+
+  function isShortlisted(barcode) {
+    return load().some(e => e.barcode === barcode);
+  }
+
+  function clearList() { localStorage.removeItem(KEY); }
+
+  function getCount() { return load().length; }
+
+  // Summary stats for the shortlist
+  function getSummary() {
+    const list = load();
+    if (list.length === 0) return { hasData: false };
+    const avg = Math.round((list.reduce((s, e) => s + e.score, 0) / list.length) * 10) / 10;
+    const gradeCounts = { A: 0, B: 0, C: 0, D: 0, E: 0 };
+    list.forEach(e => { if (gradeCounts[e.grade] !== undefined) gradeCounts[e.grade]++; });
+    return { hasData: true, total: list.length, avgScore: avg, gradeCounts };
+  }
+
+  return { addItem, removeItem, getList, isShortlisted, clearList, getCount, getSummary };
+})();
