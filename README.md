@@ -47,7 +47,7 @@ Scan a product barcode and receive instant feedback on its carbon footprint, sup
 ## 🛠 Tech Stack
 
 - **Frontend:** HTML5, CSS3, JavaScript (Vanilla)
-- **Barcode Scanning:** Camera API / barcode detection
+- **Barcode Scanning:** Camera API / barcode detection using ZXing Barcode Scanner
 - **Scoring Engine:** Custom sustainability algorithm (`scoring.js`)
 - **Data:** Publicly available environmental & supply chain databases
 - **Deployment:** [Vercel](https://vercel.com)
